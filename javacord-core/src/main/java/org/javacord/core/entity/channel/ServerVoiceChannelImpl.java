@@ -1,11 +1,13 @@
 package org.javacord.core.entity.channel;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.javacord.api.audio.VoiceConnection;
 import org.javacord.api.entity.DiscordEntity;
 import org.javacord.api.entity.channel.ChannelCategory;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.user.User;
 import org.javacord.core.DiscordApiImpl;
+import org.javacord.core.audio.AudioManagerImpl;
 import org.javacord.core.entity.server.ServerImpl;
 import org.javacord.core.listener.channel.server.voice.InternalServerVoiceChannelAttachableListenerManager;
 
@@ -14,6 +16,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -99,6 +102,16 @@ public class ServerVoiceChannelImpl extends ServerChannelImpl
      */
     public void removeConnectedUser(long userId) {
         connectedUsers.remove(userId);
+    }
+
+    @Override
+    public CompletableFuture<VoiceConnection> connect() {
+        return connect(false, false);
+    }
+
+    @Override
+    public CompletableFuture<VoiceConnection> connect(boolean selfMute, boolean selfDeafen) {
+        return ((AudioManagerImpl) getApi().getAudioManager()).startNewConnection(this, selfMute, selfDeafen);
     }
 
     @Override

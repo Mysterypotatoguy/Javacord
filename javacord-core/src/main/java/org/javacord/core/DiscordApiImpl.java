@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.javacord.api.AccountType;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.Javacord;
+import org.javacord.api.audio.AudioManager;
 import org.javacord.api.entity.ApplicationInfo;
 import org.javacord.api.entity.activity.Activity;
 import org.javacord.api.entity.activity.ActivityType;
@@ -28,6 +29,7 @@ import org.javacord.api.listener.GloballyAttachableListener;
 import org.javacord.api.listener.ObjectAttachableListener;
 import org.javacord.api.util.concurrent.ThreadPool;
 import org.javacord.api.util.event.ListenerManager;
+import org.javacord.core.audio.AudioManagerImpl;
 import org.javacord.core.entity.activity.ActivityImpl;
 import org.javacord.core.entity.activity.ApplicationInfoImpl;
 import org.javacord.core.entity.emoji.CustomEmojiImpl;
@@ -120,6 +122,11 @@ public class DiscordApiImpl implements DiscordApi, InternalGloballyAttachableLis
      * The websocket adapter used to connect to Discord.
      */
     private volatile DiscordWebSocketAdapter websocketAdapter = null;
+
+    /**
+     * The audio manager for this instance.
+     */
+    private AudioManager audioManager;
 
     /**
      * The account type of the bot.
@@ -320,6 +327,7 @@ public class DiscordApiImpl implements DiscordApi, InternalGloballyAttachableLis
         this.currentShard = currentShard;
         this.totalShards = totalShards;
         this.waitForServersOnStartup = waitForServersOnStartup;
+        this.audioManager = new AudioManagerImpl(this);
         this.reconnectDelayProvider = x ->
                 (int) Math.round(Math.pow(x, 1.5) - (1 / (1 / (0.1 * x) + 1)) * Math.pow(x, 1.5)) + (currentShard * 6);
 
@@ -926,6 +934,11 @@ public class DiscordApiImpl implements DiscordApi, InternalGloballyAttachableLis
     }
 
     @Override
+    public AudioManager getAudioManager() {
+        return audioManager;
+    }
+
+    @Override
     public AccountType getAccountType() {
         return accountType;
     }
@@ -1080,6 +1093,7 @@ public class DiscordApiImpl implements DiscordApi, InternalGloballyAttachableLis
                 }
                 httpClient.dispatcher().executorService().shutdown();
                 httpClient.connectionPool().evictAll();
+                ((AudioManagerImpl) getAudioManager()).disconnectAll();
             }
             disconnectCalled = true;
         }
