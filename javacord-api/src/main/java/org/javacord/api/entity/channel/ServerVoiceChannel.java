@@ -1,5 +1,6 @@
 package org.javacord.api.entity.channel;
 
+import org.javacord.api.audio.VoiceConnection;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.listener.channel.server.voice.ServerVoiceChannelAttachableListenerManager;
 
@@ -18,6 +19,20 @@ public interface ServerVoiceChannel extends ServerChannel, VoiceChannel, Categor
     default ChannelType getType() {
         return ChannelType.SERVER_VOICE_CHANNEL;
     }
+
+    /**
+     * Connects to this voice channel.
+     *
+     * @return a future containing the voice connection.
+     */
+    CompletableFuture<VoiceConnection> connect();
+
+    /**
+     * Connects to this voice channel with the given self mute and self deafen status.
+     *
+     * @return a future containing the voice connection.
+     */
+    CompletableFuture<VoiceConnection> connect(boolean selfMute, boolean selfDeafen);
 
     /**
      * Gets the bitrate (int bits) of the channel.

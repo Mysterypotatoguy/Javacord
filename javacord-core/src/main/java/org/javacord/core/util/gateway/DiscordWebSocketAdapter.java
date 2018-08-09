@@ -47,10 +47,11 @@ import org.javacord.core.util.handler.guild.GuildMemberRemoveHandler;
 import org.javacord.core.util.handler.guild.GuildMemberUpdateHandler;
 import org.javacord.core.util.handler.guild.GuildMembersChunkHandler;
 import org.javacord.core.util.handler.guild.GuildUpdateHandler;
-import org.javacord.core.util.handler.guild.VoiceStateUpdateHandler;
 import org.javacord.core.util.handler.guild.role.GuildRoleCreateHandler;
 import org.javacord.core.util.handler.guild.role.GuildRoleDeleteHandler;
 import org.javacord.core.util.handler.guild.role.GuildRoleUpdateHandler;
+import org.javacord.core.util.handler.guild.voice.VoiceServerUpdateHandler;
+import org.javacord.core.util.handler.guild.voice.VoiceStateUpdateHandler;
 import org.javacord.core.util.handler.message.MessageCreateHandler;
 import org.javacord.core.util.handler.message.MessageDeleteBulkHandler;
 import org.javacord.core.util.handler.message.MessageDeleteHandler;
@@ -784,7 +785,6 @@ public class DiscordWebSocketAdapter extends WebSocketAdapter {
         addHandler(new GuildMemberRemoveHandler(api));
         addHandler(new GuildMemberUpdateHandler(api));
         addHandler(new GuildUpdateHandler(api));
-        addHandler(new VoiceStateUpdateHandler(api));
 
         // role
         addHandler(new GuildRoleCreateHandler(api));
@@ -817,6 +817,10 @@ public class DiscordWebSocketAdapter extends WebSocketAdapter {
         addHandler(new MessageReactionAddHandler(api));
         addHandler(new MessageReactionRemoveAllHandler(api));
         addHandler(new MessageReactionRemoveHandler(api));
+
+        // voice
+        addHandler(new VoiceStateUpdateHandler(api));
+        addHandler(new VoiceServerUpdateHandler(api));
     }
 
     /**
@@ -835,6 +839,15 @@ public class DiscordWebSocketAdapter extends WebSocketAdapter {
      */
     public WebSocket getWebSocket() {
         return websocket.get();
+    }
+
+    /**
+     * Gets the id for the current session.
+     *
+     * @return the current session id.
+     */
+    public String getSessionId() {
+        return sessionId;
     }
 
     /**

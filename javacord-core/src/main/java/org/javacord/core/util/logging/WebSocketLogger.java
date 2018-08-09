@@ -1,5 +1,6 @@
 package org.javacord.core.util.logging;
 
+import com.neovisionaries.ws.client.ThreadType;
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketException;
 import com.neovisionaries.ws.client.WebSocketFrame;
@@ -138,5 +139,23 @@ public class WebSocketLogger implements WebSocketListener {
     @Override
     public void onSendingHandshake(WebSocket websocket, String requestLine, List<String[]> headers) {
         logger.trace("onSendingHandshake: requestLine='{}' headers='{}'", requestLine, headers);
+    }
+
+    @Override
+    public void onThreadCreated(WebSocket websocket, ThreadType threadType, Thread thread) {
+        logger.trace("onThreadCreated: threadType='{}' thread='{}'", threadType, thread);
+
+    }
+
+    @Override
+    public void onThreadStarted(WebSocket websocket, ThreadType threadType, Thread thread) {
+        logger.trace("onThreadStarted: threadType='{}' thread='{}'", threadType, thread);
+
+    }
+
+    @Override
+    public void onThreadStopping(WebSocket websocket, ThreadType threadType, Thread thread) {
+        logger.trace("onThreadStopping: threadType='{}' thread='{}'", threadType, thread);
+
     }
 }

@@ -1,4 +1,4 @@
-package org.javacord.core.util.handler.guild;
+package org.javacord.core.util.handler.guild.voice;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.javacord.api.DiscordApi;
@@ -12,6 +12,7 @@ import org.javacord.api.event.user.UserChangeDeafenedEvent;
 import org.javacord.api.event.user.UserChangeMutedEvent;
 import org.javacord.api.event.user.UserChangeSelfDeafenedEvent;
 import org.javacord.api.event.user.UserChangeSelfMutedEvent;
+import org.javacord.core.audio.ImplVoiceConnection;
 import org.javacord.core.entity.channel.GroupChannelImpl;
 import org.javacord.core.entity.channel.PrivateChannelImpl;
 import org.javacord.core.entity.channel.ServerVoiceChannelImpl;
@@ -87,6 +88,10 @@ public class VoiceStateUpdateHandler extends PacketHandler {
 
                         newChannel.ifPresent(channel -> {
                             channel.addConnectedUser(userId);
+                            if (userId == api.getClientId()) {
+                                api.getAudioManager().getVoiceConnection(server).ifPresent(connection ->
+                                        ((ImplVoiceConnection) connection).setConnectedChannel(channel));
+                            }
                             dispatchServerVoiceChannelMemberJoinEvent(userId, channel, oldChannel.orElse(null), server);
                         });
                     }
