@@ -1,5 +1,6 @@
 package org.javacord.core.audio;
 
+import org.javacord.api.audio.SpeakingFlag;
 import org.javacord.api.audio.source.AudioSource;
 import org.javacord.core.util.concurrent.ThreadFactory;
 
@@ -10,6 +11,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.EnumSet;
 
 public class AudioUdpSocket {
 
@@ -24,8 +26,6 @@ public class AudioUdpSocket {
     private byte[] secretKey;
     private char sequence = (char) 0;
     private int timestamp = 0;
-
-    private boolean isSpeaking;
 
     private ImplVoiceConnection voiceConnection;
 
@@ -78,9 +78,7 @@ public class AudioUdpSocket {
                         if (source.hasNextFrame()) {
                             byte[] audioFrame = source.pollNextFrame();
                             try {
-                                if (!isSpeaking) {
-                                    setSpeaking(true);
-                                }
+                                setSpeaking(true);
                                 DatagramPacket audioPacket = new AudioPacket(audioFrame, ssrc, sequence, timestamp)
                                         .encrypt(secretKey)
                                         .asUdpPacket(address);
@@ -95,7 +93,7 @@ public class AudioUdpSocket {
                             if (silenceFramesToSend > 0) {
                                 sendSilenceFrame();
                                 silenceFramesToSend--;
-                            } else if (isSpeaking) {
+                            } else {
                                 setSpeaking(false);
                             }
                         }
@@ -135,8 +133,13 @@ public class AudioUdpSocket {
     }
 
     public void setSpeaking(boolean speaking) {
-        isSpeaking = speaking;
-        voiceConnection.getWebSocket().sendSpeakingUpdate(speaking);
+        EnumSet<SpeakingFlag> speakingFlags = voiceConnection.getSpeakingFlags();
+        if (speaking) {
+            speakingFlags.add(SpeakingFlag.SPEAKING);
+        } else {
+            speakingFlags.remove(SpeakingFlag.SPEAKING);
+        }
+        voiceConnection.setSpeakingFlags(speakingFlags);
     }
 
     public void setSecretKey(byte[] secretKey) {

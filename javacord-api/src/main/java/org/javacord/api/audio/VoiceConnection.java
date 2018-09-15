@@ -4,6 +4,7 @@ import org.javacord.api.audio.source.AudioSource;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.server.Server;
 
+import java.util.EnumSet;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -22,6 +23,12 @@ public interface VoiceConnection {
     boolean isSelfDeafened();
 
     void setSelfDeafened(boolean deafened);
+
+    boolean isPrioritySpeaking();
+
+    void setPrioritySpeaking(boolean prioritySpeaker);
+
+    EnumSet<SpeakingFlag> getSpeakingFlags();
 
     VoiceConnectionStatus getConnectionStatus();
 
