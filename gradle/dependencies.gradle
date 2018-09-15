@@ -29,7 +29,7 @@ project(':javacord-core') {
         implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.3'
 
         // the web socket
-        implementation 'com.neovisionaries:nv-websocket-client:2.4'
+        implementation 'com.neovisionaries:nv-websocket-client:2.5'
 
         // voice encryption
         implementation 'com.codahale:xsalsa20poly1305:0.10.1'
