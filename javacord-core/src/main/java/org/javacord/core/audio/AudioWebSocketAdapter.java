@@ -10,6 +10,7 @@ import com.neovisionaries.ws.client.WebSocketException;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import com.neovisionaries.ws.client.WebSocketFrame;
 import org.apache.logging.log4j.Logger;
+import org.javacord.api.audio.SpeakingFlag;
 import org.javacord.api.audio.VoiceConnection.VoiceConnectionStatus;
 import org.javacord.core.DiscordApiImpl;
 import org.javacord.core.util.concurrent.ThreadFactory;
@@ -19,6 +20,7 @@ import org.javacord.core.util.logging.LoggerUtil;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -159,11 +161,16 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
         logger.debug("Sent SELECT " + packet.toString());
     }
 
-    public void sendSpeakingUpdate(boolean speaking) {
+    public void sendSpeakingUpdate() {
+        EnumSet<SpeakingFlag> speakingFlags = voiceConnection.getSpeakingFlags();
+        int speakingMode = 0;
+        for (SpeakingFlag flag : speakingFlags) {
+            speakingMode |= flag.getFlag();
+        }
         ObjectNode packet = api.getObjectMapper().createObjectNode();
         packet.put("op", 5)
                 .putObject("d")
-                .put("speaking", speaking ? 1 : 0)
+                .put("speaking", speakingMode)
                 .put("delay", 0)
                 .put("ssrc", voiceConnection.getUdpSocket().getSsrc());
         webSocket.sendText(packet.toString());
@@ -179,7 +186,6 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
                 .put("token", api.getToken());
         webSocket.sendText(packet.toString());
         logger.debug("Sent RESUME " + packet.toString());
-
     }
 
     private void startHeartbeat() {
@@ -273,5 +279,4 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
     public void onConnectError(WebSocket websocket, WebSocketException exception) {
         logger.warn("Websocket onConnect error!", exception);
     }
-
 }

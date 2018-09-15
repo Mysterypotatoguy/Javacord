@@ -1,11 +1,13 @@
 package org.javacord.core.audio;
 
+import org.javacord.api.audio.SpeakingFlag;
 import org.javacord.api.audio.VoiceConnection;
 import org.javacord.api.audio.source.AudioSource;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.server.Server;
 import org.javacord.core.DiscordApiImpl;
 
+import java.util.EnumSet;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -16,6 +18,8 @@ public class ImplVoiceConnection implements VoiceConnection {
 
     private boolean selfMuted = false;
     private boolean selfDeafened = false;
+
+    private EnumSet<SpeakingFlag> speakingFlags = EnumSet.of(SpeakingFlag.NONE);
 
     private VoiceConnectionStatus connectionStatus = VoiceConnectionStatus.CONNECTING;
 
@@ -89,6 +93,34 @@ public class ImplVoiceConnection implements VoiceConnection {
     @Override
     public void setSelfDeafened(boolean deafened) {
         selfDeafened = deafened;
+    }
+
+    @Override
+    public boolean isPrioritySpeaking() {
+        return speakingFlags.contains(SpeakingFlag.PRIORITY_SPEAKER);
+    }
+
+    @Override
+    public void setPrioritySpeaking(boolean prioritySpeaking) {
+        EnumSet<SpeakingFlag> speakingFlags = getSpeakingFlags();
+        if (prioritySpeaking) {
+            speakingFlags.add(SpeakingFlag.SPEAKING);
+        } else {
+            speakingFlags.remove(SpeakingFlag.SPEAKING);
+        }
+        setSpeakingFlags(speakingFlags);
+    }
+
+    @Override
+    public EnumSet<SpeakingFlag> getSpeakingFlags() {
+        return EnumSet.copyOf(speakingFlags);
+    }
+
+    public void setSpeakingFlags(EnumSet<SpeakingFlag> speakingFlags) {
+        if (!speakingFlags.equals(this.speakingFlags)) {
+            this.speakingFlags = speakingFlags;
+            webSocket.sendSpeakingUpdate();
+        }
     }
 
     @Override
