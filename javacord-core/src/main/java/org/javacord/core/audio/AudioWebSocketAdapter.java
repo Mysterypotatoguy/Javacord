@@ -194,7 +194,7 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
             packet.put("op", 3).put("d", System.currentTimeMillis());
             webSocket.sendText(packet.toString());
             logger.debug("Sent heartbeat (Interval: " + heartbeatInterval + ")");
-        }, 0, heartbeatInterval, TimeUnit.MILLISECONDS);
+        }, heartbeatInterval, heartbeatInterval, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -226,6 +226,7 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
     public void onDisconnected(WebSocket websocket, WebSocketFrame serverCloseFrame,
                                WebSocketFrame clientCloseFrame, boolean closedByServer) {
         voiceConnection.setConnectionStatus(VoiceConnectionStatus.DISCONNECTED);
+        heartbeatExecutorService.shutdownNow();
         WebSocketFrame closeFrame = Optional.ofNullable(serverCloseFrame).orElse(clientCloseFrame);
         String closeCode = String.valueOf(closeFrame.getCloseCode());
         String closeReason = Optional.ofNullable(closeFrame.getCloseReason()).orElse("Unknown");
