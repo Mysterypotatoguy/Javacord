@@ -90,15 +90,16 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
     public void onTextMessage(WebSocket websocket, String message) throws Exception {
         ObjectMapper objectMapper = api.getObjectMapper();
         JsonNode packet = objectMapper.readTree(message);
+        JsonNode data = packet.get("d");
         int op = packet.get("op").asInt();
-        Optional<VoiceGatewayOpcode> opcode = VoiceGatewayOpcode.fromCode(op);
-        if (!opcode.isPresent()) {
-            logger.debug("Received an unknown packet! (op: {}, content: {})", op, packet.toString());
+        Optional<VoiceGatewayOpcode> opcodeOptional = VoiceGatewayOpcode.fromCode(op);
+        if (!opcodeOptional.isPresent()) {
+            logger.debug("Received an unknown packet! (content: {})", packet.toString());
             return;
         }
-        logger.debug("Received packet! (op: {}, content: {})", op, packet.toString());
-        JsonNode data = packet.get("d");
-        switch (opcode.get()) {
+        VoiceGatewayOpcode opcode = opcodeOptional.get();
+        logger.debug("Received packet! (op: {}, content: {})", opcode, packet.toString());
+        switch (opcode) {
             case READY:
                 InetSocketAddress udpAddress = new InetSocketAddress(data.get("ip").asText(), data.get("port").asInt());
                 int ssrc = data.get("ssrc").asInt();
@@ -116,7 +117,6 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
             case SPEAKING:
                 // TODO: Handle SPEAKING
             case HEARTBEAT_ACK:
-                logger.debug("Got heartbeat ACK");
                 break;
             case HELLO:
                 heartbeatInterval = data.get("heartbeat_interval").asInt();
@@ -129,9 +129,6 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
                 break;
             case CLIENT_DISCONNECT:
                 // TODO: Handle CLIENT_DISCONNECT
-                break;
-            default:
-                logger.info("Received a packet that we shouldn't have received! (op: {}, content: {})", op, packet.toString());
                 break;
         }
     }
