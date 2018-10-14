@@ -2,7 +2,6 @@ package org.javacord.core.audio;
 
 import org.javacord.api.audio.SpeakingFlag;
 import org.javacord.api.audio.source.AudioSource;
-import org.javacord.core.util.concurrent.ThreadFactory;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -66,8 +65,7 @@ public class AudioUdpSocket {
     }
 
     public void startSendingThread() {
-        sendThread = new ThreadFactory("Javacord Audio Thread (Server: " + voiceConnection.getServer().getId() + ")", true)
-                .newThread(() -> {
+        sendThread = new Thread(() -> {
                     long lastFrameTimestamp = System.nanoTime();
                     int silenceFramesToSend = 0;
                     while (!sendThread.isInterrupted()) {
@@ -100,6 +98,8 @@ public class AudioUdpSocket {
                         lastFrameTimestamp = System.nanoTime();
                     }
                 });
+        sendThread.setName("Javacord Audio Send Thread (Server: " + voiceConnection.getServer().getId() + ")");
+        sendThread.setDaemon(true);
         sendThread.start();
     }
 
