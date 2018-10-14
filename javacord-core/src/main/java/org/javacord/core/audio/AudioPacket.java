@@ -10,10 +10,10 @@ import java.nio.ByteBuffer;
 public class AudioPacket {
 
     private static final byte[] SILENCE_FRAME = {(byte) 0xF8, (byte) 0xFF, (byte) 0xFE};
-    private final byte RTP_TYPE = (byte) 0x80;
-    private final byte RTP_VERSION = (byte) 0x78;
-    private final int RTP_HEADER_LENGTH = 12;
-    private final int NONCE_LENGTH = 24;
+    private static final byte RTP_TYPE = (byte) 0x80;
+    private static final byte RTP_VERSION = (byte) 0x78;
+    private static final int RTP_HEADER_LENGTH = 12;
+    private static final int NONCE_LENGTH = 24;
     private boolean encrypted;
     private byte[] header;
     private byte[] audioFrame;
