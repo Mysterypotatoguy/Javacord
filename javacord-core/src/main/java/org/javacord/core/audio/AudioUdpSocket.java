@@ -70,7 +70,12 @@ public class AudioUdpSocket {
                     int silenceFramesToSend = 0;
                     while (!sendThread.isInterrupted()) {
                         if (!voiceConnection.getAudioSource().isPresent() || System.nanoTime() - lastFrameTimestamp < 20000000L) {
-                            continue;
+                            try {
+                                Thread.sleep((20000000L - (System.nanoTime() - lastFrameTimestamp)) / 1000000);
+                                continue;
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                         }
                         AudioSource source = voiceConnection.getAudioSource().get();
                         if (source.hasNextFrame()) {
