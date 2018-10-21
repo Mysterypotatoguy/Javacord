@@ -13,6 +13,11 @@ public class FileAudioSource implements AudioSource {
     private FileInputStream inputStream;
     private int offset = 0;
 
+    /**
+     * Creates a new instance of a FileAudioSource.
+     *
+     * @param file The file to take audio data from.
+     */
     public FileAudioSource(File file) {
         this.file = file;
         try {

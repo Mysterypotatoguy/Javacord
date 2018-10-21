@@ -24,14 +24,27 @@ public class AudioManagerImpl implements AudioManager {
     //Server ID, VoiceConnection
     private HashMap<Long, VoiceConnection> voiceConnections = new HashMap<>();
 
+    /**
+     * Creates a new AudioManager.
+     *
+     * @param api The DiscordApi instance.
+     */
     public AudioManagerImpl(DiscordApiImpl api) {
         this.api = api;
     }
 
-    /*
-     * Starts a new voice connection, or if a connection exists for this channel, return it.
+    /**
+     * Starts a new voice connection for the given channel, or if a connection already exists for this channel return
+     * it.
+     *
+     * @param channel The channel to connect to.
+     * @param selfMute The self-mute state to have on join.
+     * @param selfDeafen The self-deafen state to have on join.
+     * @return A VoiceConnection for this connection.
      */
-    public CompletableFuture<VoiceConnection> startNewConnection(ServerVoiceChannel channel, boolean selfMute, boolean selfDeafen) {
+    public CompletableFuture<VoiceConnection> startNewConnection(ServerVoiceChannel channel,
+                                                                 boolean selfMute,
+                                                                 boolean selfDeafen) {
         CompletableFuture<VoiceConnection> future = new CompletableFuture<>();
         if (voiceConnections.containsKey(channel.getServer().getId())) {
             //Already connected to channel in this guild
@@ -62,10 +75,15 @@ public class AudioManagerImpl implements AudioManager {
         return future;
     }
 
-    /*
-     * Moves an active voice connection from one channel to another
+    /**
+     * Moves an active voice connection from one channel to another.
+     *
+     * @param connection The VoiceConnection to move.
+     * @param destChannel The destination channel.
+     * @return The VoiceConnection.
      */
-    public CompletableFuture<VoiceConnection> moveConnection(ImplVoiceConnection connection, ServerVoiceChannel destChannel) {
+    public CompletableFuture<VoiceConnection> moveConnection(ImplVoiceConnection connection,
+                                                             ServerVoiceChannel destChannel) {
         CompletableFuture<VoiceConnection> future = new CompletableFuture<>();
         if (destChannel.getServer().equals(connection.getServer())) {
             if (connection.getConnectedChannel().equals(destChannel)) {
@@ -105,10 +123,13 @@ public class AudioManagerImpl implements AudioManager {
         return future;
     }
 
-    /*
-     * Finishes a connection and returns the completed VoiceConnection to the user
-     * This happens when the audio websocket receives a SESSION_DESCRIPTION (VOp 4) and signifies the VoiceConnection is complete
-     * and ready to receive events/send audio
+    /**
+     * Finishes a connection and returns the completed VoiceConnection to the user.
+     * This happens when the audio websocket receives a SESSION_DESCRIPTION (VOp 4) and signifies the VoiceConnection
+     * is complete and ready to receive events/send audio.
+     *
+     * @param serverId The ID of the server which this connection is connected to.
+     * @param connection The VoiceConnection to return.
      */
     public void completeConnection(Long serverId, VoiceConnection connection) {
         CompletableFuture<VoiceConnection> future = pendingFutures.get(serverId);
@@ -116,10 +137,18 @@ public class AudioManagerImpl implements AudioManager {
         future.complete(connection);
     }
 
+    /**
+     * Removes a VoiceConnection from the list of active voice connections.
+     *
+     * @param serverId The ID of the server to remove the connection for.
+     */
     public void removeConnection(Long serverId) {
         voiceConnections.remove(serverId);
     }
 
+    /**
+     * Disconnects all active voice connections.
+     */
     public void disconnectAll() {
         voiceConnections.values().forEach(VoiceConnection::disconnect);
     }

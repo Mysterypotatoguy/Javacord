@@ -49,6 +49,14 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
     private boolean shouldReconnect = true;
     private boolean isReconnecting = false;
 
+    /**
+     * Constructs a new AudioWebSocketAdapter instance.
+     *
+     * @param api             The DiscordApi instance.
+     * @param voiceConnection The VoiceConnection to attach to.
+     * @param endpoint        The endpoint to connect to.
+     * @param token           The voice token received.
+     */
     public AudioWebSocketAdapter(DiscordApiImpl api, ImplVoiceConnection voiceConnection, String endpoint,
                                  String token) {
         this.api = api;
@@ -61,6 +69,9 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
                 true));
     }
 
+    /**
+     * Connects the websocket to the voice server.
+     */
     public void connect() {
         WebSocketFactory factory = new WebSocketFactory();
         try {
@@ -72,6 +83,9 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
         }
     }
 
+    /**
+     * Reconnects the websocket to the voice server.
+     */
     public void reconnect() {
         if (voiceConnection.getConnectionStatus() != VoiceConnectionStatus.DISCONNECTED) {
             disconnect();
@@ -80,6 +94,9 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
         connect();
     }
 
+    /**
+     * Disconnects the websocket from the voice server.
+     */
     public void disconnect() {
         shouldReconnect = false;
         heartbeatExecutorService.shutdownNow();
@@ -130,9 +147,15 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
             case CLIENT_DISCONNECT:
                 // TODO: Handle CLIENT_DISCONNECT
                 break;
+            default:
+                //This should be impossible
+                break;
         }
     }
 
+    /**
+     * Sends an OP 0 IDENTIFY packet via voice websocket.
+     */
     private void sendIdentify() {
         ObjectNode packet = api.getObjectMapper().createObjectNode();
         packet.put("op", 0)
@@ -145,6 +168,9 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
         logger.debug("Sent IDENTIFY " + packet.toString());
     }
 
+    /**
+     * Sends an OP 1 SELECT packet via voice websocket.
+     */
     private void sendSelectProtocol(InetSocketAddress address) {
         ObjectNode packet = api.getObjectMapper().createObjectNode();
         packet.put("op", 1)
@@ -158,6 +184,9 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
         logger.debug("Sent SELECT " + packet.toString());
     }
 
+    /**
+     * Sends an OP 5 SPEAKING packet via voice websocket.
+     */
     public void sendSpeakingUpdate() {
         EnumSet<SpeakingFlag> speakingFlags = voiceConnection.getSpeakingFlags();
         int speakingMode = 0;
@@ -174,6 +203,9 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
         logger.debug("Sent SPEAKING " + packet.toString());
     }
 
+    /**
+     * Sends an OP 7 RESUME packet via voice websocket.
+     */
     private void sendResume() {
         ObjectNode packet = api.getObjectMapper().createObjectNode();
         packet.put("op", 7)
@@ -185,6 +217,9 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
         logger.debug("Sent RESUME " + packet.toString());
     }
 
+    /**
+     * Starts an executor to send an OP 3 HEARTBEAT at the set interval given.
+     */
     private void startHeartbeat() {
         heartbeatExecutorService.scheduleAtFixedRate(() -> {
             ObjectNode packet = api.getObjectMapper().createObjectNode();

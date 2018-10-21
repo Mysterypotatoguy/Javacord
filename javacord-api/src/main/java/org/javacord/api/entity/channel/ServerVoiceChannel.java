@@ -30,6 +30,8 @@ public interface ServerVoiceChannel extends ServerChannel, VoiceChannel, Categor
     /**
      * Connects to this voice channel with the given self mute and self deafen status.
      *
+     * @param selfMute Whether or not to be self-muted upon join.
+     * @param selfDeafen Whether or not to be self-deafened upon join.
      * @return a future containing the voice connection.
      */
     CompletableFuture<VoiceConnection> connect(boolean selfMute, boolean selfDeafen);

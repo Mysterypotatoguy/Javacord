@@ -28,6 +28,13 @@ public class AudioUdpSocket {
 
     private ImplVoiceConnection voiceConnection;
 
+    /**
+     * Constructs a new AudioUdpSocket instance.
+     *
+     * @param voiceConnection The VoiceConnection to attach to.
+     * @param address         The IP address of the voice server.
+     * @param ssrc            The SSRC given.
+     */
     public AudioUdpSocket(ImplVoiceConnection voiceConnection, InetSocketAddress address, int ssrc) {
         this.voiceConnection = voiceConnection;
         this.address = address;
@@ -39,11 +46,19 @@ public class AudioUdpSocket {
         }
     }
 
+    /**
+     * Disconnects the socket.
+     */
     public void disconnect() {
         stopSendingThread();
         socket.close();
     }
 
+    /**
+     * Finds the local IP address being used to send/receive voice.
+     *
+     * @return The local IP address being used to send/receive voice.
+     */
     public InetSocketAddress findLocalUdpAddress() { // TODO: Rename
         try {
             byte[] data = ByteBuffer.allocate(70).putInt(ssrc).array();
@@ -64,49 +79,56 @@ public class AudioUdpSocket {
         }
     }
 
+    /**
+     * Starts the thread which handles the sending of audio to discord as it is available.
+     */
     public void startSendingThread() {
         sendThread = new Thread(() -> {
-                    long lastFrameTimestamp = System.nanoTime();
-                    int silenceFramesToSend = 0;
-                    while (!sendThread.isInterrupted()) {
-                        if (!voiceConnection.getAudioSource().isPresent() || System.nanoTime() - lastFrameTimestamp < 20000000L) {
-                            try {
-                                Thread.sleep((20000000L - (System.nanoTime() - lastFrameTimestamp)) / 1000000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        AudioSource source = voiceConnection.getAudioSource().get();
-                        if (source.hasNextFrame()) {
-                            byte[] audioFrame = source.pollNextFrame();
-                            try {
-                                setSpeaking(true);
-                                DatagramPacket audioPacket = new AudioPacket(audioFrame, ssrc, sequence, timestamp)
-                                        .encrypt(secretKey)
-                                        .asUdpPacket(address);
-                                socket.send(audioPacket);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            sequence++;
-                            timestamp += 960;
-                            silenceFramesToSend = 5;
-                        } else {
-                            if (silenceFramesToSend > 0) {
-                                sendSilenceFrame();
-                                silenceFramesToSend--;
-                            } else {
-                                setSpeaking(false);
-                            }
-                        }
-                        lastFrameTimestamp = System.nanoTime();
+            long lastFrameTimestamp = System.nanoTime();
+            int silenceFramesToSend = 0;
+            while (!sendThread.isInterrupted()) {
+                if (!voiceConnection.getAudioSource().isPresent()
+                        || System.nanoTime() - lastFrameTimestamp < 20000000L) {
+                    try {
+                        Thread.sleep((20000000L - (System.nanoTime() - lastFrameTimestamp)) / 1000000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
-                });
+                }
+                AudioSource source = voiceConnection.getAudioSource().get();
+                if (source.hasNextFrame()) {
+                    byte[] audioFrame = source.pollNextFrame();
+                    try {
+                        setSpeaking(true);
+                        DatagramPacket audioPacket = new AudioPacket(audioFrame, ssrc, sequence, timestamp)
+                                .encrypt(secretKey)
+                                .asUdpPacket(address);
+                        socket.send(audioPacket);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    sequence++;
+                    timestamp += 960;
+                    silenceFramesToSend = 5;
+                } else {
+                    if (silenceFramesToSend > 0) {
+                        sendSilenceFrame();
+                        silenceFramesToSend--;
+                    } else {
+                        setSpeaking(false);
+                    }
+                }
+                lastFrameTimestamp = System.nanoTime();
+            }
+        });
         sendThread.setName("Javacord Audio Send Thread (Server: " + voiceConnection.getServer().getId() + ")");
         sendThread.setDaemon(true);
         sendThread.start();
     }
 
+    /**
+     * Stops the thread which handles the sending of audio to discord as it is available.
+     */
     public void stopSendingThread() {
         if (sendThread != null && sendThread.isAlive()) {
             sendThread.interrupt();
@@ -127,6 +149,9 @@ public class AudioUdpSocket {
         });
     }*/
 
+    /**
+     * Sends a silence frame to discord to indicate speaking has ceased.
+     */
     private void sendSilenceFrame() {
         try {
             AudioPacket silencePacket = new AudioPacket(null, ssrc, sequence, timestamp).encrypt(secretKey);
@@ -136,6 +161,11 @@ public class AudioUdpSocket {
         }
     }
 
+    /**
+     * Sets the speaking state.
+     *
+     * @param speaking The speaking state.
+     */
     public void setSpeaking(boolean speaking) {
         EnumSet<SpeakingFlag> speakingFlags = voiceConnection.getSpeakingFlags();
         if (speaking) {
@@ -146,14 +176,29 @@ public class AudioUdpSocket {
         voiceConnection.setSpeakingFlags(speakingFlags);
     }
 
+    /**
+     * Sets the secret key which is used to encrypt audio.
+     *
+     * @param secretKey The secret key.
+     */
     public void setSecretKey(byte[] secretKey) {
         this.secretKey = secretKey;
     }
 
+    /**
+     * Gets the address of the voice server that this socket is connected to.
+     *
+     * @return The IP address of the voice server.
+     */
     public InetSocketAddress getAddress() {
         return address;
     }
 
+    /**
+     * Gets the SSRC of this connection.
+     *
+     * @return The SSRC.
+     */
     public int getSsrc() {
         return ssrc;
     }

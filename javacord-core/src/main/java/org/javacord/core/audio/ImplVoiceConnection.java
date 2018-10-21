@@ -29,6 +29,14 @@ public class ImplVoiceConnection implements VoiceConnection {
     private AudioSource audioSource;
     // private List<> outputs;
 
+    /**
+     * Constructs a new ImplVoiceConnection instance.
+     *
+     * @param api      The DiscordApi instance
+     * @param channel  The channel this connection is connected to
+     * @param endpoint The endpoint to connect the websocket to.
+     * @param token    The voice token to provide when opening the websocket.
+     */
     public ImplVoiceConnection(DiscordApiImpl api, ServerVoiceChannel channel, String endpoint, String token) {
         this.api = api;
         this.connectedChannel = channel;
@@ -36,6 +44,13 @@ public class ImplVoiceConnection implements VoiceConnection {
         webSocket.connect();
     }
 
+    /**
+     * Disconnects the connection and reconnects it to the given channel.
+     *
+     * @param channel  The channel to connect to.
+     * @param endpoint The endpoint to connect to.
+     * @param token    The voice token.
+     */
     public void reconnect(ServerVoiceChannel channel, String endpoint, String token) {
         disconnect();
         webSocket = new AudioWebSocketAdapter(api, this, endpoint, token);
@@ -49,7 +64,9 @@ public class ImplVoiceConnection implements VoiceConnection {
     }
 
     @Override
-    public CompletableFuture<VoiceConnection> moveTo(ServerVoiceChannel voiceChannel, boolean selfMute, boolean selfDeafen) {
+    public CompletableFuture<VoiceConnection> moveTo(ServerVoiceChannel voiceChannel,
+                                                     boolean selfMute,
+                                                     boolean selfDeafen) {
         if (connectionStatus == VoiceConnectionStatus.DISCONNECTED) {
             CompletableFuture<VoiceConnection> future = new CompletableFuture<>();
             future.completeExceptionally(new IllegalStateException("VoiceConnection is disconnected!"));
@@ -116,6 +133,11 @@ public class ImplVoiceConnection implements VoiceConnection {
         return EnumSet.copyOf(speakingFlags);
     }
 
+    /**
+     * Sets the active speaking flags.
+     *
+     * @param speakingFlags An EnumSet of SpeakingFlags representing speaking modes.
+     */
     public void setSpeakingFlags(EnumSet<SpeakingFlag> speakingFlags) {
         if (!speakingFlags.equals(this.speakingFlags)) {
             this.speakingFlags = speakingFlags;
@@ -128,6 +150,11 @@ public class ImplVoiceConnection implements VoiceConnection {
         return connectionStatus;
     }
 
+    /**
+     * Sets the status of the connection.
+     *
+     * @param status A VoiceConnectionStatus representing the status of the connection.
+     */
     public void setConnectionStatus(VoiceConnectionStatus status) {
         this.connectionStatus = status;
     }
@@ -147,6 +174,11 @@ public class ImplVoiceConnection implements VoiceConnection {
         return connectedChannel;
     }
 
+    /**
+     * Sets the currently connected channel.
+     *
+     * @param channel The channel which this connection is connected to.
+     */
     public void setConnectedChannel(ServerVoiceChannel channel) {
         this.connectedChannel = channel;
     }
@@ -156,14 +188,29 @@ public class ImplVoiceConnection implements VoiceConnection {
         return getConnectedChannel().getServer();
     }
 
+    /**
+     * Gets the AudioWebSocket of this connection.
+     *
+     * @return The AudioWebSocket for this connection.
+     */
     public AudioWebSocketAdapter getWebSocket() {
         return webSocket;
     }
 
+    /**
+     * Gets the AudioUdpSocket of this connection.
+     *
+     * @return The AudioUdpSocket for this connection.
+     */
     public AudioUdpSocket getUdpSocket() {
         return udpSocket;
     }
 
+    /**
+     * Sets the AudioUdpSocket for this channel.
+     *
+     * @param socket The AudioUdpSocket.
+     */
     public void setUdpSocket(AudioUdpSocket socket) {
         this.udpSocket = socket;
     }

@@ -18,6 +18,14 @@ public class AudioPacket {
     private byte[] header;
     private byte[] audioFrame;
 
+    /**
+     * Constructs a new AudioPacket instance.
+     *
+     * @param audioFrame A byte array containing 20ms of audio.
+     * @param ssrc       The SSRC.
+     * @param sequence   The sequence number.
+     * @param timestamp  The timestamp.
+     */
     public AudioPacket(byte[] audioFrame, int ssrc, char sequence, int timestamp) {
         if (audioFrame == null) {
             audioFrame = SILENCE_FRAME;
@@ -32,6 +40,12 @@ public class AudioPacket {
         header = buffer.array();
     }
 
+    /**
+     * Encrypts the packet using the given key.
+     *
+     * @param key The key to encrypt with.
+     * @return The AudioPacket with the audio frame encrypted.
+     */
     public AudioPacket encrypt(byte[] key) {
         byte[] nonce = new byte[NONCE_LENGTH];
         System.arraycopy(header, 0, nonce, 0, RTP_HEADER_LENGTH);
@@ -41,6 +55,12 @@ public class AudioPacket {
         return this;
     }
 
+    /**
+     * Packs the AudioPacket into a DatagramPacket.
+     *
+     * @param address The destination address.
+     * @return The AudioPacket as a DatagramPacket.
+     */
     public DatagramPacket asUdpPacket(InetSocketAddress address) {
         byte[] packet = new byte[header.length + audioFrame.length];
         System.arraycopy(header, 0, packet, 0, header.length);
@@ -48,6 +68,11 @@ public class AudioPacket {
         return new DatagramPacket(packet, packet.length, address);
     }
 
+    /**
+     * Gets whether or not the packet has been encrypted.
+     *
+     * @return Whether or not the packet has been encrypted.
+     */
     public boolean isEncrypted() {
         return encrypted;
     }
