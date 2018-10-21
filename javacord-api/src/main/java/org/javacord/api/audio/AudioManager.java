@@ -8,10 +8,27 @@ import java.util.Optional;
 
 public interface AudioManager {
 
+    /**
+     * Gets a collection with all active voice connections.
+     *
+     * @return A collection with all active voice connections.
+     */
     Collection<VoiceConnection> getVoiceConnections();
 
+    /**
+     * Gets the voice connection for a specified channel.
+     *
+     * @param channel The channel to get a voice connection for.
+     * @return The voice connection associated with the specified voice channel.
+     */
     Optional<VoiceConnection> getVoiceConnection(ServerVoiceChannel channel);
 
+    /**
+     * Gets the voice connection for a specified channel.
+     *
+     * @param server The server to get a voice connection for.
+     * @return The voice connection associated with the specified server.
+     */
     Optional<VoiceConnection> getVoiceConnection(Server server);
 
 }

@@ -9,6 +9,11 @@ import org.javacord.api.listener.server.ServerAttachableListener;
 public interface VoiceServerUpdateListener extends ServerAttachableListener,
         GloballyAttachableListener, ObjectAttachableListener {
 
+    /**
+     * This method is called every time a voice server update packet is received.
+     *
+     * @param event The event.
+     */
     void onVoiceServerUpdate(VoiceServerUpdateEvent event);
 
 }

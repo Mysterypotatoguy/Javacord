@@ -8,6 +8,13 @@ public class VoiceServerUpdateEventImpl extends ServerEventImpl implements Voice
     private String token;
     private String endpoint;
 
+    /**
+     * Constructs a new VoiceServerUpdateEventImpl instance.
+     *
+     * @param server   The server this voice server update is for.
+     * @param token    The voice token to provide when opening a voice websocket.
+     * @param endpoint The endpoint to connect the voice websocket to.
+     */
     public VoiceServerUpdateEventImpl(Server server, String token, String endpoint) {
         super(server);
         this.token = token;
