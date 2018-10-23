@@ -2,6 +2,7 @@ package org.javacord.core.audio.source;
 
 import org.apache.logging.log4j.Logger;
 import org.javacord.api.audio.source.FixedLengthAudioSource;
+import org.javacord.api.audio.source.ReplayableAudioSource;
 import org.javacord.core.util.logging.LoggerUtil;
 
 import java.io.File;
@@ -10,7 +11,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-public class FileAudioSource implements FixedLengthAudioSource {
+public class FileAudioSource implements FixedLengthAudioSource, ReplayableAudioSource {
 
     private static final int BYTES_PER_FRAME = 900;
     private static final int MS_PER_FRAME = 20;
@@ -27,11 +28,7 @@ public class FileAudioSource implements FixedLengthAudioSource {
      */
     public FileAudioSource(File file) {
         this.file = file;
-        try {
-            inputStream = new FileInputStream(file);
-        } catch (FileNotFoundException e) {
-            LOGGER.error("Attempted to create file audio source from inexistant file", e);
-        }
+        this.reset();
     }
 
     @Override
@@ -51,13 +48,15 @@ public class FileAudioSource implements FixedLengthAudioSource {
 
     @Override
     public boolean hasNextFrame() {
-        return offset <= file.length();
+        return inputStream != null && offset <= file.length();
     }
 
     @Override
     public void stop() {
         try {
-            inputStream.close();
+            if (inputStream != null) {
+                inputStream.close();
+            }
         } catch (IOException e) {
             LOGGER.warn("Exception while closing file audio source", e);
         }
@@ -73,5 +72,16 @@ public class FileAudioSource implements FixedLengthAudioSource {
     public long getPlayed(TimeUnit unit) {
         long timePlayedInMilliSeconds = offset * MS_PER_FRAME / BYTES_PER_FRAME;
         return TimeUnit.MILLISECONDS.convert(timePlayedInMilliSeconds, unit);
+    }
+
+    @Override
+    public void reset() {
+        this.stop();
+        try {
+            this.inputStream = new FileInputStream(this.file);
+        } catch (FileNotFoundException e) {
+            LOGGER.error("Tried to create FileAudioSource from non-existing file");
+        }
+        this.offset = 0;
     }
 }
