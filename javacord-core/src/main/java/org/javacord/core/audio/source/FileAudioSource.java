@@ -3,6 +3,7 @@ package org.javacord.core.audio.source;
 import org.apache.logging.log4j.Logger;
 import org.javacord.api.audio.source.FixedLengthAudioSource;
 import org.javacord.api.audio.source.ReplayableAudioSource;
+import org.javacord.api.audio.source.SeekableAudioSource;
 import org.javacord.core.util.logging.LoggerUtil;
 
 import java.io.File;
@@ -11,7 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-public class FileAudioSource implements FixedLengthAudioSource, ReplayableAudioSource {
+public class FileAudioSource implements FixedLengthAudioSource, ReplayableAudioSource, SeekableAudioSource {
 
     private static final int BYTES_PER_FRAME = 900;
     private static final int MS_PER_FRAME = 20;
@@ -69,7 +70,16 @@ public class FileAudioSource implements FixedLengthAudioSource, ReplayableAudioS
     }
 
     @Override
-    public long getPlayed(TimeUnit unit) {
+    public void jumpTo(long mark, TimeUnit unit) {
+        long newOffset = unit.convert(mark, TimeUnit.MILLISECONDS) * BYTES_PER_FRAME / MS_PER_FRAME;
+        if (newOffset < 0 || newOffset > file.length()) {
+            throw new RuntimeException("Out of bounds");
+        }
+        this.offset = (int) newOffset;
+    }
+
+    @Override
+    public long getPosition(TimeUnit unit) {
         long timePlayedInMilliSeconds = offset * MS_PER_FRAME / BYTES_PER_FRAME;
         return TimeUnit.MILLISECONDS.convert(timePlayedInMilliSeconds, unit);
     }
