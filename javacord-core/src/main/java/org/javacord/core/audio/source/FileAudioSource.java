@@ -2,6 +2,7 @@ package org.javacord.core.audio.source;
 
 import org.apache.logging.log4j.Logger;
 import org.javacord.api.audio.source.FixedLengthAudioSource;
+import org.javacord.api.audio.source.NameableAudioSource;
 import org.javacord.api.audio.source.ReplayableAudioSource;
 import org.javacord.api.audio.source.SeekableAudioSource;
 import org.javacord.core.util.logging.LoggerUtil;
@@ -12,7 +13,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-public class FileAudioSource implements FixedLengthAudioSource, ReplayableAudioSource, SeekableAudioSource {
+public class FileAudioSource implements FixedLengthAudioSource, ReplayableAudioSource, SeekableAudioSource,
+        NameableAudioSource {
 
     private static final int BYTES_PER_FRAME = 900;
     private static final int MS_PER_FRAME = 20;
@@ -93,5 +95,10 @@ public class FileAudioSource implements FixedLengthAudioSource, ReplayableAudioS
             LOGGER.error("Tried to create FileAudioSource from non-existing file");
         }
         this.offset = 0;
+    }
+
+    @Override
+    public String getName() {
+        return file.getName();
     }
 }

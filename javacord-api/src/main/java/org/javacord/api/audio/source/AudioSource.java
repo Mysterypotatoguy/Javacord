@@ -28,6 +28,15 @@ public interface AudioSource extends Specializable<AudioSource> {
     void stop();
 
     /**
+     * Gets the name if the source is nameable.
+     *
+     * @return The sources' name if possible.
+     */
+    default Optional<String> tryGetName() {
+        return as(NameableAudioSource.class).map(NameableAudioSource::getName);
+    }
+
+    /**
      * Gets the source as a pausable audio source.
      *
      * @return The source as a pausable source.
