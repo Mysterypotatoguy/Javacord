@@ -36,14 +36,6 @@ public interface AudioSource extends Specializable<AudioSource> {
         return as(PausableAudioSource.class);
     }
 
-    /**
-     * Gets the source as a persistent audio source.
-     *
-     * @return The source as a persistent source.
-     */
-    default Optional<PersistentAudioSource> asPersistentAudioSource() {
-        return as(PersistentAudioSource.class);
-    }
 
 
 
