@@ -1,8 +1,10 @@
 package org.javacord.api.audio.source;
 
+import org.javacord.api.util.Specializable;
+
 import java.util.Optional;
 
-public interface AudioSource {
+public interface AudioSource extends Specializable<AudioSource> {
 
     /**
      * Polls for the next 20ms of audio from the source.
@@ -23,10 +25,7 @@ public interface AudioSource {
      * @return The source as a pausable source.
      */
     default Optional<PausableAudioSource> asPausableAudioSource() {
-        if (this instanceof PausableAudioSource) {
-            return Optional.of((PausableAudioSource) this);
-        }
-        return Optional.empty();
+        return as(PausableAudioSource.class);
     }
 
     /**
@@ -34,10 +33,9 @@ public interface AudioSource {
      * @return The source as a persistent source.
      */
     default Optional<PersistentAudioSource> asPersistentAudioSource() {
-        if (this instanceof PausableAudioSource) {
-            return Optional.of((PersistentAudioSource) this);
-        }
-        return Optional.empty();
+        return as(PersistentAudioSource.class);
     }
+
+
 
 }
