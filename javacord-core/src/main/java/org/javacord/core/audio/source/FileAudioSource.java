@@ -1,15 +1,20 @@
 package org.javacord.core.audio.source;
 
-import org.javacord.api.audio.source.AudioSource;
+import org.apache.logging.log4j.Logger;
+import org.javacord.api.audio.source.FixedLengthAudioSource;
+import org.javacord.core.util.logging.LoggerUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
-public class FileAudioSource implements AudioSource {
+public class FileAudioSource implements FixedLengthAudioSource {
 
-    private static final int BUFFER_SIZE = 900;
+    private static final int BYTES_PER_FRAME = 900;
+    private static final int MS_PER_FRAME = 20;
+    private static final Logger LOGGER = LoggerUtil.getLogger(FileAudioSource.class);
 
     private File file;
     private FileInputStream inputStream;
@@ -25,19 +30,22 @@ public class FileAudioSource implements AudioSource {
         try {
             inputStream = new FileInputStream(file);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            LOGGER.error("Attempted to create file audio source from inexistant file", e);
         }
     }
 
     @Override
     public byte[] pollNextFrame() {
-        byte[] frame = new byte[BUFFER_SIZE];
+        byte[] frame = new byte[BYTES_PER_FRAME];
         try {
-            inputStream.read(frame);
+            int bytesRead = inputStream.read(frame);
+            if (bytesRead < BYTES_PER_FRAME) {
+                throw new AssertionError("Insufficient bytes to read despite prior check.");
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        offset += BUFFER_SIZE;
+        offset += BYTES_PER_FRAME;
         return frame;
     }
 
@@ -46,4 +54,24 @@ public class FileAudioSource implements AudioSource {
         return offset <= file.length();
     }
 
+    @Override
+    public void stop() {
+        try {
+            inputStream.close();
+        } catch (IOException e) {
+            LOGGER.warn("Exception while closing file audio source", e);
+        }
+    }
+
+    @Override
+    public long getLength(TimeUnit unit) {
+        long durationInMilliSeconds = file.length() * MS_PER_FRAME / BYTES_PER_FRAME;
+        return TimeUnit.MILLISECONDS.convert(durationInMilliSeconds, unit);
+    }
+
+    @Override
+    public long getPlayed(TimeUnit unit) {
+        long timePlayedInMilliSeconds = offset * MS_PER_FRAME / BYTES_PER_FRAME;
+        return TimeUnit.MILLISECONDS.convert(timePlayedInMilliSeconds, unit);
+    }
 }

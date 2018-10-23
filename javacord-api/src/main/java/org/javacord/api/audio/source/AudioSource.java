@@ -21,7 +21,15 @@ public interface AudioSource extends Specializable<AudioSource> {
     boolean hasNextFrame();
 
     /**
+     * Stop this audio source.
+     *
+     * <p>Any remaining audio frames may be dropped, underlying connections and caches be cleaned up
+     */
+    void stop();
+
+    /**
      * Gets the source as a pausable audio source.
+     *
      * @return The source as a pausable source.
      */
     default Optional<PausableAudioSource> asPausableAudioSource() {
@@ -30,6 +38,7 @@ public interface AudioSource extends Specializable<AudioSource> {
 
     /**
      * Gets the source as a persistent audio source.
+     *
      * @return The source as a persistent source.
      */
     default Optional<PersistentAudioSource> asPersistentAudioSource() {
