@@ -36,6 +36,32 @@ public interface AudioSource extends Specializable<AudioSource> {
         return as(PausableAudioSource.class);
     }
 
+    /**
+     * Gets the source as a seekable audio source.
+     *
+     * @return The source as a seekable source.
+     */
+    default Optional<SeekableAudioSource> asSeekableAudioSource() {
+        return as(SeekableAudioSource.class);
+    }
+
+    /**
+     * Gets the source as an audio source of fixed length.
+     *
+     * @return The source as a fixed length source.
+     */
+    default Optional<FixedLengthAudioSource> asFixedLengthAudioSource() {
+        return as(FixedLengthAudioSource.class);
+    }
+
+    /**
+     * Gets the source as a replayble audio source.
+     *
+     * @return The source as a replayable audio source.
+     */
+    default Optional<ReplayableAudioSource> asReplayableAudioSource() {
+        return as(ReplayableAudioSource.class);
+    }
 
 
 
