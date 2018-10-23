@@ -1,4 +1,6 @@
-package org.javacord.api.audio.source;
+package org.javacord.core.audio.source;
+
+import org.javacord.api.audio.source.AudioSource;
 
 import java.io.File;
 import java.io.FileInputStream;
