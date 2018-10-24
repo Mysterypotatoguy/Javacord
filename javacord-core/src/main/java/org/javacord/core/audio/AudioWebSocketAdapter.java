@@ -10,8 +10,8 @@ import com.neovisionaries.ws.client.WebSocketException;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import com.neovisionaries.ws.client.WebSocketFrame;
 import org.apache.logging.log4j.Logger;
+import org.javacord.api.audio.AudioConnection.VoiceConnectionStatus;
 import org.javacord.api.audio.SpeakingFlag;
-import org.javacord.api.audio.VoiceConnection.VoiceConnectionStatus;
 import org.javacord.core.DiscordApiImpl;
 import org.javacord.core.util.concurrent.ThreadFactory;
 import org.javacord.core.util.gateway.VoiceGatewayOpcode;
@@ -44,7 +44,7 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
     private String token;
 
     private DiscordApiImpl api;
-    private ImplVoiceConnection voiceConnection;
+    private AudioConnectionImpl voiceConnection;
 
     private boolean shouldReconnect = true;
     private boolean isReconnecting = false;
@@ -53,11 +53,11 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
      * Constructs a new AudioWebSocketAdapter instance.
      *
      * @param api             The DiscordApi instance.
-     * @param voiceConnection The VoiceConnection to attach to.
+     * @param voiceConnection The AudioConnection to attach to.
      * @param endpoint        The endpoint to connect to.
      * @param token           The voice token received.
      */
-    public AudioWebSocketAdapter(DiscordApiImpl api, ImplVoiceConnection voiceConnection, String endpoint,
+    public AudioWebSocketAdapter(DiscordApiImpl api, AudioConnectionImpl voiceConnection, String endpoint,
                                  String token) {
         this.api = api;
         this.voiceConnection = voiceConnection;

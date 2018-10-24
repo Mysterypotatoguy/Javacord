@@ -1,7 +1,7 @@
 package org.javacord.core.audio;
 
+import org.javacord.api.audio.AudioConnection;
 import org.javacord.api.audio.SpeakingFlag;
-import org.javacord.api.audio.VoiceConnection;
 import org.javacord.api.audio.source.AudioSource;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.server.Server;
@@ -11,7 +11,7 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class ImplVoiceConnection implements VoiceConnection {
+public class AudioConnectionImpl implements AudioConnection {
 
     private DiscordApiImpl api;
     private ServerVoiceChannel connectedChannel;
@@ -30,14 +30,14 @@ public class ImplVoiceConnection implements VoiceConnection {
     // private List<> outputs;
 
     /**
-     * Constructs a new ImplVoiceConnection instance.
+     * Constructs a new AudioConnectionImpl instance.
      *
      * @param api      The DiscordApi instance
      * @param channel  The channel this connection is connected to
      * @param endpoint The endpoint to connect the websocket to.
      * @param token    The voice token to provide when opening the websocket.
      */
-    public ImplVoiceConnection(DiscordApiImpl api, ServerVoiceChannel channel, String endpoint, String token) {
+    public AudioConnectionImpl(DiscordApiImpl api, ServerVoiceChannel channel, String endpoint, String token) {
         this.api = api;
         this.connectedChannel = channel;
         webSocket = new AudioWebSocketAdapter(api, this, endpoint, token);
@@ -59,17 +59,17 @@ public class ImplVoiceConnection implements VoiceConnection {
     }
 
     @Override
-    public CompletableFuture<VoiceConnection> moveTo(ServerVoiceChannel voiceChannel) {
+    public CompletableFuture<AudioConnection> moveTo(ServerVoiceChannel voiceChannel) {
         return moveTo(voiceChannel, selfMuted, selfDeafened);
     }
 
     @Override
-    public CompletableFuture<VoiceConnection> moveTo(ServerVoiceChannel voiceChannel,
+    public CompletableFuture<AudioConnection> moveTo(ServerVoiceChannel voiceChannel,
                                                      boolean selfMute,
                                                      boolean selfDeafen) {
         if (connectionStatus == VoiceConnectionStatus.DISCONNECTED) {
-            CompletableFuture<VoiceConnection> future = new CompletableFuture<>();
-            future.completeExceptionally(new IllegalStateException("VoiceConnection is disconnected!"));
+            CompletableFuture<AudioConnection> future = new CompletableFuture<>();
+            future.completeExceptionally(new IllegalStateException("AudioConnection is disconnected!"));
             return future;
         }
         setSelfMuted(selfMute);
@@ -81,7 +81,7 @@ public class ImplVoiceConnection implements VoiceConnection {
     public CompletableFuture<Void> disconnect() {
         if (connectionStatus == VoiceConnectionStatus.DISCONNECTED) {
             CompletableFuture<Void> future = new CompletableFuture<>();
-            future.completeExceptionally(new IllegalStateException("VoiceConnection is disconnected!"));
+            future.completeExceptionally(new IllegalStateException("AudioConnection is disconnected!"));
             return future;
         }
         webSocket.disconnect();

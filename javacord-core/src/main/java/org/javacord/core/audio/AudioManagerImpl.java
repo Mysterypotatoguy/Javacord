@@ -1,7 +1,7 @@
 package org.javacord.core.audio;
 
+import org.javacord.api.audio.AudioConnection;
 import org.javacord.api.audio.AudioManager;
-import org.javacord.api.audio.VoiceConnection;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.listener.server.voice.VoiceServerUpdateListener;
@@ -19,10 +19,10 @@ public class AudioManagerImpl implements AudioManager {
 
     private DiscordApiImpl api;
 
-    private HashMap<Long, CompletableFuture<VoiceConnection>> pendingFutures = new HashMap<>();
+    private HashMap<Long, CompletableFuture<AudioConnection>> pendingFutures = new HashMap<>();
 
-    //Server ID, VoiceConnection
-    private HashMap<Long, VoiceConnection> voiceConnections = new HashMap<>();
+    //Server ID, AudioConnection
+    private HashMap<Long, AudioConnection> voiceConnections = new HashMap<>();
 
     /**
      * Creates a new AudioManager.
@@ -40,12 +40,12 @@ public class AudioManagerImpl implements AudioManager {
      * @param channel The channel to connect to.
      * @param selfMute The self-mute state to have on join.
      * @param selfDeafen The self-deafen state to have on join.
-     * @return A VoiceConnection for this connection.
+     * @return A AudioConnection for this connection.
      */
-    public CompletableFuture<VoiceConnection> startNewConnection(ServerVoiceChannel channel,
+    public CompletableFuture<AudioConnection> startNewConnection(ServerVoiceChannel channel,
                                                                  boolean selfMute,
                                                                  boolean selfDeafen) {
-        CompletableFuture<VoiceConnection> future = new CompletableFuture<>();
+        CompletableFuture<AudioConnection> future = new CompletableFuture<>();
         if (voiceConnections.containsKey(channel.getServer().getId())) {
             //Already connected to channel in this guild
             if (voiceConnections.get(channel.getServer().getId()).getConnectedChannel().equals(channel)) {
@@ -54,7 +54,7 @@ public class AudioManagerImpl implements AudioManager {
                 return future;
             }
             //But attempting to join a different channel (an intra-server move)
-            return moveConnection(((ImplVoiceConnection) voiceConnections.get(channel.getServer().getId())), channel);
+            return moveConnection(((AudioConnectionImpl) voiceConnections.get(channel.getServer().getId())), channel);
         }
         AtomicReference<ListenerManager<VoiceServerUpdateListener>> lm = new AtomicReference<>();
         lm.set(api.addListener(VoiceServerUpdateListener.class, event -> {
@@ -63,7 +63,7 @@ public class AudioManagerImpl implements AudioManager {
             }
             String endpoint = event.getEndpoint();
             String token = event.getToken();
-            voiceConnections.put(channel.getServer().getId(), new ImplVoiceConnection(api, channel, endpoint, token));
+            voiceConnections.put(channel.getServer().getId(), new AudioConnectionImpl(api, channel, endpoint, token));
             pendingFutures.put(channel.getId(), future);
             lm.get().remove();
         }));
@@ -78,13 +78,13 @@ public class AudioManagerImpl implements AudioManager {
     /**
      * Moves an active voice connection from one channel to another.
      *
-     * @param connection The VoiceConnection to move.
+     * @param connection The AudioConnection to move.
      * @param destChannel The destination channel.
-     * @return The VoiceConnection.
+     * @return The AudioConnection.
      */
-    public CompletableFuture<VoiceConnection> moveConnection(ImplVoiceConnection connection,
+    public CompletableFuture<AudioConnection> moveConnection(AudioConnectionImpl connection,
                                                              ServerVoiceChannel destChannel) {
-        CompletableFuture<VoiceConnection> future = new CompletableFuture<>();
+        CompletableFuture<AudioConnection> future = new CompletableFuture<>();
         if (destChannel.getServer().equals(connection.getServer())) {
             if (connection.getConnectedChannel().equals(destChannel)) {
                 //We are already connected to this channel, so there's no need to do anything
@@ -106,7 +106,7 @@ public class AudioManagerImpl implements AudioManager {
                 String token = event.getToken();
 
                 //Terminate destination (If there is one)
-                getVoiceConnection(destChannel.getServer()).ifPresent(VoiceConnection::disconnect);
+                getVoiceConnection(destChannel.getServer()).ifPresent(AudioConnection::disconnect);
                 //Terminate & reconnect source to destination
                 connection.reconnect(destChannel, endpoint, token);
                 //Replace the old connection since we don't need it any more
@@ -124,21 +124,21 @@ public class AudioManagerImpl implements AudioManager {
     }
 
     /**
-     * Finishes a connection and returns the completed VoiceConnection to the user.
-     * This happens when the audio websocket receives a SESSION_DESCRIPTION (VOp 4) and signifies the VoiceConnection
+     * Finishes a connection and returns the completed AudioConnection to the user.
+     * This happens when the audio websocket receives a SESSION_DESCRIPTION (VOp 4) and signifies the AudioConnection
      * is complete and ready to receive events/send audio.
      *
      * @param serverId The ID of the server which this connection is connected to.
-     * @param connection The VoiceConnection to return.
+     * @param connection The AudioConnection to return.
      */
-    public void completeConnection(Long serverId, VoiceConnection connection) {
-        CompletableFuture<VoiceConnection> future = pendingFutures.get(serverId);
+    public void completeConnection(Long serverId, AudioConnection connection) {
+        CompletableFuture<AudioConnection> future = pendingFutures.get(serverId);
         //TODO: Check for disconnects between starting and completion.
         future.complete(connection);
     }
 
     /**
-     * Removes a VoiceConnection from the list of active voice connections.
+     * Removes a AudioConnection from the list of active voice connections.
      *
      * @param serverId The ID of the server to remove the connection for.
      */
@@ -150,22 +150,22 @@ public class AudioManagerImpl implements AudioManager {
      * Disconnects all active voice connections.
      */
     public void disconnectAll() {
-        voiceConnections.values().forEach(VoiceConnection::disconnect);
+        voiceConnections.values().forEach(AudioConnection::disconnect);
     }
 
     @Override
-    public Collection<VoiceConnection> getVoiceConnections() {
+    public Collection<AudioConnection> getVoiceConnections() {
         return Collections.unmodifiableCollection(voiceConnections.values());
     }
 
     @Override
-    public Optional<VoiceConnection> getVoiceConnection(ServerVoiceChannel channel) {
+    public Optional<AudioConnection> getVoiceConnection(ServerVoiceChannel channel) {
         return Optional.ofNullable(voiceConnections.get(channel.getServer().getId()))
                 .filter(connection -> connection.getConnectedChannel().equals(channel));
     }
 
     @Override
-    public Optional<VoiceConnection> getVoiceConnection(Server server) {
+    public Optional<AudioConnection> getVoiceConnection(Server server) {
         return Optional.ofNullable(voiceConnections.get(server.getId()));
     }
 

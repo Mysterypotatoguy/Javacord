@@ -13,7 +13,7 @@ public interface AudioManager {
      *
      * @return A collection with all active voice connections.
      */
-    Collection<VoiceConnection> getVoiceConnections();
+    Collection<AudioConnection> getVoiceConnections();
 
     /**
      * Gets the voice connection for a specified channel.
@@ -21,7 +21,7 @@ public interface AudioManager {
      * @param channel The channel to get a voice connection for.
      * @return The voice connection associated with the specified voice channel.
      */
-    Optional<VoiceConnection> getVoiceConnection(ServerVoiceChannel channel);
+    Optional<AudioConnection> getVoiceConnection(ServerVoiceChannel channel);
 
     /**
      * Gets the voice connection for a specified channel.
@@ -29,6 +29,6 @@ public interface AudioManager {
      * @param server The server to get a voice connection for.
      * @return The voice connection associated with the specified server.
      */
-    Optional<VoiceConnection> getVoiceConnection(Server server);
+    Optional<AudioConnection> getVoiceConnection(Server server);
 
 }

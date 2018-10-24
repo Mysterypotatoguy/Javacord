@@ -26,16 +26,16 @@ public class AudioUdpSocket {
     private char sequence = (char) 0;
     private int timestamp = 0;
 
-    private ImplVoiceConnection voiceConnection;
+    private AudioConnectionImpl voiceConnection;
 
     /**
      * Constructs a new AudioUdpSocket instance.
      *
-     * @param voiceConnection The VoiceConnection to attach to.
+     * @param voiceConnection The AudioConnection to attach to.
      * @param address         The IP address of the voice server.
      * @param ssrc            The SSRC given.
      */
-    public AudioUdpSocket(ImplVoiceConnection voiceConnection, InetSocketAddress address, int ssrc) {
+    public AudioUdpSocket(AudioConnectionImpl voiceConnection, InetSocketAddress address, int ssrc) {
         this.voiceConnection = voiceConnection;
         this.address = address;
         this.ssrc = ssrc;
