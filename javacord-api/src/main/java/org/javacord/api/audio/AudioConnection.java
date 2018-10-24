@@ -8,7 +8,7 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public interface VoiceConnection {
+public interface AudioConnection {
 
     /**
      * Moves the voice connection to the given voice channel.
@@ -16,7 +16,7 @@ public interface VoiceConnection {
      * @param voiceChannel The voice channel to move to.
      * @return A future indicating the success of the action.
      */
-    CompletableFuture<VoiceConnection> moveTo(ServerVoiceChannel voiceChannel);
+    CompletableFuture<AudioConnection> moveTo(ServerVoiceChannel voiceChannel);
 
     /**
      * Moves the voice connection to the given voice channel.
@@ -26,7 +26,7 @@ public interface VoiceConnection {
      * @param selfDeafen   Whether or not to be self-deafened on join.
      * @return A future indicating the success of the action.
      */
-    CompletableFuture<VoiceConnection> moveTo(ServerVoiceChannel voiceChannel, boolean selfMute, boolean selfDeafen);
+    CompletableFuture<AudioConnection> moveTo(ServerVoiceChannel voiceChannel, boolean selfMute, boolean selfDeafen);
 
     /**
      * Disconnects from the current voice channel.

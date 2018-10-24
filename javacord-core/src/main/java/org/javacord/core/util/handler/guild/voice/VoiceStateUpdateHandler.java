@@ -12,7 +12,7 @@ import org.javacord.api.event.user.UserChangeDeafenedEvent;
 import org.javacord.api.event.user.UserChangeMutedEvent;
 import org.javacord.api.event.user.UserChangeSelfDeafenedEvent;
 import org.javacord.api.event.user.UserChangeSelfMutedEvent;
-import org.javacord.core.audio.ImplVoiceConnection;
+import org.javacord.core.audio.AudioConnectionImpl;
 import org.javacord.core.entity.channel.GroupChannelImpl;
 import org.javacord.core.entity.channel.PrivateChannelImpl;
 import org.javacord.core.entity.channel.ServerVoiceChannelImpl;
@@ -23,7 +23,6 @@ import org.javacord.core.event.user.UserChangeDeafenedEventImpl;
 import org.javacord.core.event.user.UserChangeMutedEventImpl;
 import org.javacord.core.event.user.UserChangeSelfDeafenedEventImpl;
 import org.javacord.core.event.user.UserChangeSelfMutedEventImpl;
-import org.javacord.core.util.event.DispatchQueueSelector;
 import org.javacord.core.util.gateway.PacketHandler;
 
 import java.util.Optional;
@@ -90,7 +89,7 @@ public class VoiceStateUpdateHandler extends PacketHandler {
                             channel.addConnectedUser(userId);
                             if (userId == api.getClientId()) {
                                 api.getAudioManager().getVoiceConnection(server).ifPresent(connection ->
-                                        ((ImplVoiceConnection) connection).setConnectedChannel(channel));
+                                        ((AudioConnectionImpl) connection).setConnectedChannel(channel));
                             }
                             dispatchServerVoiceChannelMemberJoinEvent(userId, channel, oldChannel.orElse(null), server);
                         });
@@ -142,7 +141,7 @@ public class VoiceStateUpdateHandler extends PacketHandler {
                 userId, newChannel, oldChannel);
 
         api.getEventDispatcher().dispatchServerVoiceChannelMemberJoinEvent(
-                (DispatchQueueSelector) server, server, newChannel, userId, event);
+                server, server, newChannel, userId, event);
     }
 
     private void dispatchServerVoiceChannelMemberLeaveEvent(
@@ -151,7 +150,7 @@ public class VoiceStateUpdateHandler extends PacketHandler {
                 userId, newChannel, oldChannel);
 
         api.getEventDispatcher().dispatchServerVoiceChannelMemberLeaveEvent(
-                (DispatchQueueSelector) server, server, oldChannel, userId, event);
+                server, server, oldChannel, userId, event);
     }
 
     private void dispatchUserChangeSelfMutedEvent(
@@ -160,7 +159,7 @@ public class VoiceStateUpdateHandler extends PacketHandler {
                 new UserChangeSelfMutedEventImpl(userId, server, newSelfMuted, oldSelfMuted);
 
         api.getEventDispatcher().dispatchUserChangeSelfMutedEvent(
-                (DispatchQueueSelector) server, server, userId, event);
+                server, server, userId, event);
     }
 
     private void dispatchUserChangeSelfDeafenedEvent(
@@ -169,14 +168,14 @@ public class VoiceStateUpdateHandler extends PacketHandler {
                 new UserChangeSelfDeafenedEventImpl(userId, server, newSelfDeafened, oldSelfDeafened);
 
         api.getEventDispatcher().dispatchUserChangeSelfDeafenedEvent(
-                (DispatchQueueSelector) server, server, userId, event);
+                server, server, userId, event);
     }
 
     private void dispatchUserChangeMutedEvent(Long userId, Server server, boolean newMuted, boolean oldMuted) {
         UserChangeMutedEvent event =
                 new UserChangeMutedEventImpl(userId, server, newMuted, oldMuted);
 
-        api.getEventDispatcher().dispatchUserChangeMutedEvent((DispatchQueueSelector) server, server, userId, event);
+        api.getEventDispatcher().dispatchUserChangeMutedEvent(server, server, userId, event);
     }
 
     private void dispatchUserChangeDeafenedEvent(
@@ -184,7 +183,7 @@ public class VoiceStateUpdateHandler extends PacketHandler {
         UserChangeDeafenedEvent event =
                 new UserChangeDeafenedEventImpl(userId, server, newDeafened, oldDeafened);
 
-        api.getEventDispatcher().dispatchUserChangeDeafenedEvent((DispatchQueueSelector) server, server, userId, event);
+        api.getEventDispatcher().dispatchUserChangeDeafenedEvent(server, server, userId, event);
     }
 
 }

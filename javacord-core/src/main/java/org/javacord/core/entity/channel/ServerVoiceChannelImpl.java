@@ -1,7 +1,7 @@
 package org.javacord.core.entity.channel;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.javacord.api.audio.VoiceConnection;
+import org.javacord.api.audio.AudioConnection;
 import org.javacord.api.entity.DiscordEntity;
 import org.javacord.api.entity.channel.ChannelCategory;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
@@ -105,12 +105,12 @@ public class ServerVoiceChannelImpl extends ServerChannelImpl
     }
 
     @Override
-    public CompletableFuture<VoiceConnection> connect() {
+    public CompletableFuture<AudioConnection> connect() {
         return connect(false, false);
     }
 
     @Override
-    public CompletableFuture<VoiceConnection> connect(boolean selfMute, boolean selfDeafen) {
+    public CompletableFuture<AudioConnection> connect(boolean selfMute, boolean selfDeafen) {
         return ((AudioManagerImpl) getApi().getAudioManager()).startNewConnection(this, selfMute, selfDeafen);
     }
 
