@@ -35,10 +35,11 @@ public class VoiceServerUpdateHandler extends PacketHandler {
                     String endpoint = packet.get("endpoint").asText();
                     VoiceServerUpdateEvent event = new VoiceServerUpdateEventImpl(server, token, endpoint);
                     List<VoiceServerUpdateListener> listeners = new ArrayList<>();
-                    listeners.addAll(api.getObjectListeners(Server.class, server.getId(), VoiceServerUpdateListener.class));
+                    listeners.addAll(
+                            api.getObjectListeners(Server.class, server.getId(), VoiceServerUpdateListener.class));
                     listeners.addAll(api.getListeners(VoiceServerUpdateListener.class));
 
                     api.getEventDispatcher().dispatchVoiceServerUpdateEvent(server, server, event);
-        });
+                });
     }
 }
