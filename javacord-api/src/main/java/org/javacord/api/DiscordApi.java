@@ -1,5 +1,6 @@
 package org.javacord.api;
 
+import org.javacord.api.audio.AudioConnection;
 import org.javacord.api.audio.AudioManager;
 import org.javacord.api.entity.ApplicationInfo;
 import org.javacord.api.entity.Icon;
@@ -1508,5 +1509,11 @@ public interface DiscordApi extends GloballyAttachableListenerManager {
                         })
                         .collect(Collectors.toList()));
     }
+
+    Optional<AudioConnection> getAudioConnection(ServerVoiceChannel channel);
+
+    Optional<AudioConnection> getAudioConnection(Server server);
+
+    Collection<AudioConnection> getAudioConnections();
 
 }

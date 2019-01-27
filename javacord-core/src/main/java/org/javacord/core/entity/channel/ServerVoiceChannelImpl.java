@@ -7,6 +7,7 @@ import org.javacord.api.entity.channel.ChannelCategory;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.user.User;
 import org.javacord.core.DiscordApiImpl;
+import org.javacord.core.audio.AudioConnectionImpl;
 import org.javacord.core.audio.AudioManagerImpl;
 import org.javacord.core.entity.server.ServerImpl;
 import org.javacord.core.listener.channel.server.voice.InternalServerVoiceChannelAttachableListenerManager;
@@ -111,7 +112,10 @@ public class ServerVoiceChannelImpl extends ServerChannelImpl
 
     @Override
     public CompletableFuture<AudioConnection> connect(boolean selfMute, boolean selfDeafen) {
-        return ((AudioManagerImpl) getApi().getAudioManager()).startNewConnection(this, selfMute, selfDeafen);
+        CompletableFuture<AudioConnection> future = new CompletableFuture<>();
+        //TODO: Existing connection checks
+        new AudioConnectionImpl(((DiscordApiImpl) getApi()), this, selfMute, selfDeafen, future);
+        return future;
     }
 
     @Override

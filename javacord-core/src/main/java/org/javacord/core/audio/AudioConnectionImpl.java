@@ -5,15 +5,19 @@ import org.javacord.api.audio.SpeakingFlag;
 import org.javacord.api.audio.source.AudioSource;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.server.Server;
+import org.javacord.api.listener.server.voice.VoiceServerUpdateListener;
+import org.javacord.api.util.event.ListenerManager;
 import org.javacord.core.DiscordApiImpl;
 
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class AudioConnectionImpl implements AudioConnection {
 
     private DiscordApiImpl api;
+    private CompletableFuture<AudioConnection> connectedFuture;
     private ServerVoiceChannel connectedChannel;
 
     private boolean selfMuted = false;
@@ -42,6 +46,31 @@ public class AudioConnectionImpl implements AudioConnection {
         this.connectedChannel = channel;
         webSocket = new AudioWebSocketAdapter(api, this, endpoint, token);
         webSocket.connect();
+    }
+
+    public AudioConnectionImpl(DiscordApiImpl api, ServerVoiceChannel channel, boolean selfMute, boolean selfDeafen,
+                               CompletableFuture<AudioConnection> future) {
+        this.api = api;
+        this.connectedFuture = future;
+        this.connectedChannel = channel;
+        //TODO: Handle logic for duplicate connections
+        AtomicReference<ListenerManager<VoiceServerUpdateListener>> lm = new AtomicReference<>();
+        lm.set(api.addListener(VoiceServerUpdateListener.class, event -> {
+            if (event.getServer() != channel.getServer()) {
+                return;
+            }
+            String endpoint = event.getEndpoint();
+            String token = event.getToken();
+            webSocket = new AudioWebSocketAdapter(api, this, endpoint, token);
+            webSocket.connect();
+            lm.get().remove();
+        }));
+        api.getWebSocketAdapter().sendVoiceStateUpdate(
+                channel.getServer(),
+                channel,
+                selfMute,
+                selfDeafen);
+        //TODO: Add to DiscordApiImpl map
     }
 
     /**
@@ -213,6 +242,10 @@ public class AudioConnectionImpl implements AudioConnection {
      */
     public void setUdpSocket(AudioUdpSocket socket) {
         this.udpSocket = socket;
+    }
+
+    public CompletableFuture<AudioConnection> getConnectedFuture() {
+        return connectedFuture;
     }
 
 }

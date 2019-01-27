@@ -10,11 +10,13 @@ import org.apache.logging.log4j.Logger;
 import org.javacord.api.AccountType;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.Javacord;
+import org.javacord.api.audio.AudioConnection;
 import org.javacord.api.audio.AudioManager;
 import org.javacord.api.entity.ApplicationInfo;
 import org.javacord.api.entity.activity.Activity;
 import org.javacord.api.entity.activity.ActivityType;
 import org.javacord.api.entity.channel.GroupChannel;
+import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.emoji.CustomEmoji;
 import org.javacord.api.entity.emoji.KnownCustomEmoji;
@@ -31,6 +33,7 @@ import org.javacord.api.listener.ObjectAttachableListener;
 import org.javacord.api.util.auth.Authenticator;
 import org.javacord.api.util.concurrent.ThreadPool;
 import org.javacord.api.util.event.ListenerManager;
+import org.javacord.core.audio.AudioConnectionImpl;
 import org.javacord.core.audio.AudioManagerImpl;
 import org.javacord.core.entity.activity.ActivityImpl;
 import org.javacord.core.entity.activity.ApplicationInfoImpl;
@@ -298,6 +301,9 @@ public class DiscordApiImpl implements DiscordApi, DispatchQueueSelector {
      * The queue that is notified if a message became weakly-reachable.
      */
     private final ReferenceQueue<Message> messagesCleanupQueue = new ReferenceQueue<>();
+
+    private final ConcurrentHashMap<Long, AudioConnection> audioConnections = new ConcurrentHashMap<>();
+    //TODO: getters/adders/removers
 
     /**
      * A map which contains all globally attachable listeners.
@@ -1342,6 +1348,21 @@ public class DiscordApiImpl implements DiscordApi, DispatchQueueSelector {
     @Override
     public Optional<GroupChannel> getGroupChannelById(long id) {
         return Optional.ofNullable(groupChannels.get(id));
+    }
+
+    @Override
+    public Optional<AudioConnection> getAudioConnection(ServerVoiceChannel channel) {
+        return Optional.ofNullable(audioConnections.get(channel.getServer().getId()));
+    }
+
+    @Override
+    public Optional<AudioConnection> getAudioConnection(Server server) {
+        return Optional.ofNullable(audioConnections.get(server.getId()));
+    }
+
+    @Override
+    public Collection<AudioConnection> getAudioConnections() {
+        return Collections.unmodifiableCollection(audioConnections.values());
     }
 
     @Override

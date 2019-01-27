@@ -126,10 +126,9 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
             case SESSION_DESCRIPTION:
                 byte[] secretKey = objectMapper.convertValue(data.get("secret_key"), byte[].class);
                 voiceConnection.getUdpSocket().setSecretKey(secretKey);
-                voiceConnection.setConnectionStatus(VoiceConnectionStatus.CONNECTED);
                 voiceConnection.getUdpSocket().startSendingThread();
-                ((AudioManagerImpl) api.getAudioManager())
-                        .completeConnection(voiceConnection.getConnectedChannel().getId(), voiceConnection);
+                voiceConnection.setConnectionStatus(VoiceConnectionStatus.CONNECTED);
+                voiceConnection.getConnectedFuture().complete(voiceConnection);
                 break;
             case SPEAKING:
                 // TODO: Handle SPEAKING
