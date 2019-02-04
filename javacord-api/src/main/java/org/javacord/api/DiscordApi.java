@@ -1,7 +1,5 @@
 package org.javacord.api;
 
-import org.javacord.api.audio.AudioConnection;
-import org.javacord.api.audio.AudioManager;
 import org.javacord.api.entity.ApplicationInfo;
 import org.javacord.api.entity.Icon;
 import org.javacord.api.entity.activity.Activity;
@@ -78,13 +76,6 @@ public interface DiscordApi extends GloballyAttachableListenerManager {
      * @return A utility class to interact with uncached messages.
      */
     UncachedMessageUtil getUncachedMessageUtil();
-
-    /**
-     * Gets the audio manager for the current instance.
-     *
-     * @return The audio manager instance.
-     */
-    AudioManager getAudioManager();
 
     /**
      * Gets the type of the current account.
@@ -1509,11 +1500,5 @@ public interface DiscordApi extends GloballyAttachableListenerManager {
                         })
                         .collect(Collectors.toList()));
     }
-
-    Optional<AudioConnection> getAudioConnection(ServerVoiceChannel channel);
-
-    Optional<AudioConnection> getAudioConnection(Server server);
-
-    Collection<AudioConnection> getAudioConnections();
 
 }

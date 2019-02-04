@@ -1,5 +1,6 @@
 package org.javacord.api.entity.server;
 
+import org.javacord.api.audio.AudioConnection;
 import org.javacord.api.entity.DiscordEntity;
 import org.javacord.api.entity.Icon;
 import org.javacord.api.entity.Nameable;
@@ -28,7 +29,7 @@ import org.javacord.api.entity.user.User;
 import org.javacord.api.entity.webhook.Webhook;
 import org.javacord.api.listener.server.ServerAttachableListenerManager;
 
-import java.awt.Color;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.InputStream;
@@ -282,6 +283,13 @@ public interface Server extends DiscordEntity, Nameable, UpdatableFromCache<Serv
      * @return The afk timeout in seconds of the server.
      */
     int getAfkTimeoutInSeconds();
+
+    /**
+     * Gets the audio connection for the server (If there is one).
+     *
+     * @return The audio connection for the server.
+     */
+    Optional<AudioConnection> getAudioConnection();
 
     /**
      * Gets the amount of members without a role which were inactive at least the given amount of days.

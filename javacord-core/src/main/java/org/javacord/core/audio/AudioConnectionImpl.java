@@ -8,6 +8,7 @@ import org.javacord.api.entity.server.Server;
 import org.javacord.api.listener.server.voice.VoiceServerUpdateListener;
 import org.javacord.api.util.event.ListenerManager;
 import org.javacord.core.DiscordApiImpl;
+import org.javacord.core.entity.server.ServerImpl;
 
 import java.util.EnumSet;
 import java.util.Optional;
@@ -54,6 +55,7 @@ public class AudioConnectionImpl implements AudioConnection {
         this.connectedFuture = future;
         this.connectedChannel = channel;
         //TODO: Handle logic for duplicate connections
+        future.thenAccept(connection -> ((ServerImpl) connection.getServer()).setAudioConnection(this));
         AtomicReference<ListenerManager<VoiceServerUpdateListener>> lm = new AtomicReference<>();
         lm.set(api.addListener(VoiceServerUpdateListener.class, event -> {
             if (event.getServer() != channel.getServer()) {

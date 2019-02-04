@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.apache.logging.log4j.Logger;
 import org.javacord.api.AccountType;
 import org.javacord.api.DiscordApi;
+import org.javacord.api.audio.AudioConnection;
 import org.javacord.api.entity.DiscordEntity;
 import org.javacord.api.entity.Icon;
 import org.javacord.api.entity.Region;
@@ -168,6 +169,11 @@ public class ServerImpl implements Server, Cleanupable, InternalServerAttachable
      * If the server is ready (all members are cached).
      */
     private volatile boolean ready = false;
+
+    /**
+     * The audio connection for the server if one exists.
+     */
+    private volatile AudioConnection audioConnection;
 
     /**
      * A list with all consumers who will be informed when the server is ready.
@@ -486,6 +492,11 @@ public class ServerImpl implements Server, Cleanupable, InternalServerAttachable
      */
     public void setMultiFactorAuthenticationLevel(MultiFactorAuthenticationLevel multiFactorAuthenticationLevel) {
         this.multiFactorAuthenticationLevel = multiFactorAuthenticationLevel;
+    }
+
+    @Override
+    public Optional<AudioConnection> getAudioConnection() {
+        return Optional.ofNullable(audioConnection);
     }
 
     /**
@@ -906,6 +917,10 @@ public class ServerImpl implements Server, Cleanupable, InternalServerAttachable
     @Override
     public int getAfkTimeoutInSeconds() {
         return afkTimeout;
+    }
+
+    public void setAudioConnection(AudioConnection audioConnection) {
+        this.audioConnection = audioConnection;
     }
 
     @Override
