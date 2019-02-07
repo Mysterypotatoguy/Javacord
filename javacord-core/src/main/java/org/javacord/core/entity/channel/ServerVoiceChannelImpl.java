@@ -8,15 +8,10 @@ import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.user.User;
 import org.javacord.core.DiscordApiImpl;
 import org.javacord.core.audio.AudioConnectionImpl;
-import org.javacord.core.audio.AudioManagerImpl;
 import org.javacord.core.entity.server.ServerImpl;
 import org.javacord.core.listener.channel.server.voice.InternalServerVoiceChannelAttachableListenerManager;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -113,8 +108,18 @@ public class ServerVoiceChannelImpl extends ServerChannelImpl
     @Override
     public CompletableFuture<AudioConnection> connect(boolean selfMute, boolean selfDeafen) {
         CompletableFuture<AudioConnection> future = new CompletableFuture<>();
-        //TODO: Existing connection checks
-        new AudioConnectionImpl(((DiscordApiImpl) getApi()), this, selfMute, selfDeafen, future);
+        if(getServer().getAudioConnection().isPresent()) {
+            AudioConnection connection = getServer().getAudioConnection().get();
+            if(connection.getConnectedChannel().equals(this)) {
+                //There is already a connection to this channel, return it
+                future.complete(connection);
+            } else {
+                //We have a connection already in this server, move it here
+                return connection.moveTo(this, selfMute, selfDeafen);
+            }
+        } else {
+            new AudioConnectionImpl(((DiscordApiImpl) getApi()), this, selfMute, selfDeafen, future);
+        }
         return future;
     }
 

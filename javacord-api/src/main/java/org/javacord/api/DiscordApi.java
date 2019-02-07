@@ -1,18 +1,11 @@
 package org.javacord.api;
 
+import org.javacord.api.audio.AudioConnection;
 import org.javacord.api.entity.ApplicationInfo;
 import org.javacord.api.entity.Icon;
 import org.javacord.api.entity.activity.Activity;
 import org.javacord.api.entity.activity.ActivityType;
-import org.javacord.api.entity.channel.Channel;
-import org.javacord.api.entity.channel.ChannelCategory;
-import org.javacord.api.entity.channel.GroupChannel;
-import org.javacord.api.entity.channel.PrivateChannel;
-import org.javacord.api.entity.channel.ServerChannel;
-import org.javacord.api.entity.channel.ServerTextChannel;
-import org.javacord.api.entity.channel.ServerVoiceChannel;
-import org.javacord.api.entity.channel.TextChannel;
-import org.javacord.api.entity.channel.VoiceChannel;
+import org.javacord.api.entity.channel.*;
 import org.javacord.api.entity.emoji.KnownCustomEmoji;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageSet;
@@ -32,12 +25,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -1500,5 +1488,7 @@ public interface DiscordApi extends GloballyAttachableListenerManager {
                         })
                         .collect(Collectors.toList()));
     }
+
+    Collection<AudioConnection> getAudioConnections();
 
 }

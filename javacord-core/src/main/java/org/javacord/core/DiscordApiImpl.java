@@ -15,7 +15,6 @@ import org.javacord.api.entity.ApplicationInfo;
 import org.javacord.api.entity.activity.Activity;
 import org.javacord.api.entity.activity.ActivityType;
 import org.javacord.api.entity.channel.GroupChannel;
-import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.emoji.CustomEmoji;
 import org.javacord.api.entity.emoji.KnownCustomEmoji;
@@ -64,19 +63,8 @@ import java.lang.ref.WeakReference;
 import java.net.Proxy;
 import java.net.ProxySelector;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -1331,17 +1319,6 @@ public class DiscordApiImpl implements DiscordApi, DispatchQueueSelector {
     @Override
     public Optional<GroupChannel> getGroupChannelById(long id) {
         return Optional.ofNullable(groupChannels.get(id));
-    }
-
-    //TODO:
-    @Override
-    public Optional<AudioConnection> getAudioConnection(ServerVoiceChannel channel) {
-        return channel.getServer().getAudioConnection();
-    }
-
-    @Override
-    public Optional<AudioConnection> getAudioConnection(Server server) {
-        return server.getAudioConnection();
     }
 
     @Override

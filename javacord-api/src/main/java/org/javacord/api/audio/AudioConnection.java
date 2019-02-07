@@ -11,6 +11,13 @@ import java.util.concurrent.CompletableFuture;
 public interface AudioConnection {
 
     /**
+     * Disconnects from the current voice channel.
+     *
+     * @return A future indicating the success of the action.
+     */
+    CompletableFuture<Void> disconnect();
+
+    /**
      * Moves the voice connection to the given voice channel.
      *
      * @param voiceChannel The voice channel to move to.
@@ -27,13 +34,6 @@ public interface AudioConnection {
      * @return A future indicating the success of the action.
      */
     CompletableFuture<AudioConnection> moveTo(ServerVoiceChannel voiceChannel, boolean selfMute, boolean selfDeafen);
-
-    /**
-     * Disconnects from the current voice channel.
-     *
-     * @return A future indicating the success of the action.
-     */
-    CompletableFuture<Void> disconnect();
 
     /**
      * Gets the self-muted status of this connection.

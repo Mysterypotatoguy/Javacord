@@ -89,7 +89,7 @@ public class VoiceStateUpdateHandler extends PacketHandler {
                         newChannel.ifPresent(channel -> {
                             channel.addConnectedUser(userId);
                             if (userId == api.getClientId()) {
-                                api.getAudioManager().getVoiceConnection(server).ifPresent(connection ->
+                                channel.getServer().getAudioConnection().ifPresent(connection ->
                                         ((AudioConnectionImpl) connection).setConnectedChannel(channel));
                             }
                             dispatchServerVoiceChannelMemberJoinEvent(userId, channel, oldChannel.orElse(null), server);

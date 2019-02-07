@@ -3,12 +3,7 @@ package org.javacord.core.audio;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.neovisionaries.ws.client.ThreadType;
-import com.neovisionaries.ws.client.WebSocket;
-import com.neovisionaries.ws.client.WebSocketAdapter;
-import com.neovisionaries.ws.client.WebSocketException;
-import com.neovisionaries.ws.client.WebSocketFactory;
-import com.neovisionaries.ws.client.WebSocketFrame;
+import com.neovisionaries.ws.client.*;
 import org.apache.logging.log4j.Logger;
 import org.javacord.api.audio.AudioConnection.VoiceConnectionStatus;
 import org.javacord.api.audio.SpeakingFlag;
@@ -26,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class AudioWebSocketAdapter extends WebSocketAdapter {
@@ -37,7 +33,7 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
     private WebSocket webSocket;
 
     private int heartbeatInterval;
-    private ScheduledExecutorService heartbeatExecutorService;
+    private ScheduledFuture<?> heartbeatFuture;
 
     private String sessionId;
     private String endpoint;
@@ -64,9 +60,6 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
         this.sessionId = api.getWebSocketAdapter().getSessionId();
         this.endpoint = "wss://" + endpoint.replace(":80", "") + "/?v=" + VOICE_GATEWAY_VERSION;
         this.token = token;
-        heartbeatExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactory(
-                "Javacord - Audio Heartbeat Thread (Guild:" + voiceConnection.getServer().getId() + ")",
-                true));
     }
 
     /**
@@ -91,6 +84,7 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
             disconnect();
         }
         logger.debug("Attempting a reconnect to voice channel " + voiceConnection.getConnectedChannel().getId());
+        //TODO: Backoff?
         connect();
     }
 
@@ -99,7 +93,7 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
      */
     public void disconnect() {
         shouldReconnect = false;
-        heartbeatExecutorService.shutdownNow();
+        heartbeatFuture.cancel(true);
         webSocket.disconnect(WebSocketCloseCode.NORMAL.getCode(), "Disconnecting");
     }
 
@@ -220,7 +214,11 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
      * Starts an executor to send an OP 3 HEARTBEAT at the set interval given.
      */
     private void startHeartbeat() {
-        heartbeatExecutorService.scheduleAtFixedRate(() -> {
+        ScheduledExecutorService heartbeatExecutorService =
+                Executors.newSingleThreadScheduledExecutor(new ThreadFactory(
+                "Javacord - Audio Heartbeat Thread (Guild:" + voiceConnection.getServer().getId() + ")",
+                true));
+        heartbeatFuture = heartbeatExecutorService.scheduleAtFixedRate(() -> {
             ObjectNode packet = api.getObjectMapper().createObjectNode();
             packet.put("op", 3).put("d", System.currentTimeMillis());
             webSocket.sendText(packet.toString());
@@ -257,7 +255,7 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
     public void onDisconnected(WebSocket websocket, WebSocketFrame serverCloseFrame,
                                WebSocketFrame clientCloseFrame, boolean closedByServer) {
         voiceConnection.setConnectionStatus(VoiceConnectionStatus.DISCONNECTED);
-        heartbeatExecutorService.shutdownNow();
+        heartbeatFuture.cancel(true);
         WebSocketFrame closeFrame = Optional.ofNullable(serverCloseFrame).orElse(clientCloseFrame);
         String closeCode = String.valueOf(closeFrame.getCloseCode());
         String closeReason = Optional.ofNullable(closeFrame.getCloseReason()).orElse("Unknown");

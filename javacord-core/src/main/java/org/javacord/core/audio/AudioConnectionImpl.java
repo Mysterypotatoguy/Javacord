@@ -37,24 +37,17 @@ public class AudioConnectionImpl implements AudioConnection {
     /**
      * Constructs a new AudioConnectionImpl instance.
      *
-     * @param api      The DiscordApi instance
-     * @param channel  The channel this connection is connected to
-     * @param endpoint The endpoint to connect the websocket to.
-     * @param token    The voice token to provide when opening the websocket.
+     * @param api        The DiscordApiImpl instance.
+     * @param channel    The channel this connection should connect to.
+     * @param selfMute   Whether or not to be self-muted on join.
+     * @param selfDeafen Whether or not to be self-deafened on join.
+     * @param future     The CompletableFuture to complete on connection.
      */
-    public AudioConnectionImpl(DiscordApiImpl api, ServerVoiceChannel channel, String endpoint, String token) {
-        this.api = api;
-        this.connectedChannel = channel;
-        webSocket = new AudioWebSocketAdapter(api, this, endpoint, token);
-        webSocket.connect();
-    }
-
     public AudioConnectionImpl(DiscordApiImpl api, ServerVoiceChannel channel, boolean selfMute, boolean selfDeafen,
                                CompletableFuture<AudioConnection> future) {
         this.api = api;
         this.connectedFuture = future;
         this.connectedChannel = channel;
-        //TODO: Handle logic for duplicate connections
         future.thenAccept(connection -> ((ServerImpl) connection.getServer()).setAudioConnection(this));
         AtomicReference<ListenerManager<VoiceServerUpdateListener>> lm = new AtomicReference<>();
         lm.set(api.addListener(VoiceServerUpdateListener.class, event -> {
@@ -72,40 +65,6 @@ public class AudioConnectionImpl implements AudioConnection {
                 channel,
                 selfMute,
                 selfDeafen);
-        //TODO: Add to DiscordApiImpl map
-    }
-
-    /**
-     * Disconnects the connection and reconnects it to the given channel.
-     *
-     * @param channel  The channel to connect to.
-     * @param endpoint The endpoint to connect to.
-     * @param token    The voice token.
-     */
-    public void reconnect(ServerVoiceChannel channel, String endpoint, String token) {
-        disconnect();
-        webSocket = new AudioWebSocketAdapter(api, this, endpoint, token);
-        webSocket.connect();
-        setConnectedChannel(channel);
-    }
-
-    @Override
-    public CompletableFuture<AudioConnection> moveTo(ServerVoiceChannel voiceChannel) {
-        return moveTo(voiceChannel, selfMuted, selfDeafened);
-    }
-
-    @Override
-    public CompletableFuture<AudioConnection> moveTo(ServerVoiceChannel voiceChannel,
-                                                     boolean selfMute,
-                                                     boolean selfDeafen) {
-        if (connectionStatus == VoiceConnectionStatus.DISCONNECTED) {
-            CompletableFuture<AudioConnection> future = new CompletableFuture<>();
-            future.completeExceptionally(new IllegalStateException("AudioConnection is disconnected!"));
-            return future;
-        }
-        setSelfMuted(selfMute);
-        setSelfDeafened(selfDeafen);
-        return ((AudioManagerImpl) api.getAudioManager()).moveConnection(this, voiceChannel);
     }
 
     @Override
@@ -118,9 +77,60 @@ public class AudioConnectionImpl implements AudioConnection {
         webSocket.disconnect();
         udpSocket.disconnect();
         api.getWebSocketAdapter().sendVoiceStateUpdate(getServer(), null, false, false);
-        ((AudioManagerImpl) api.getAudioManager()).removeConnection(connectedChannel.getServer().getId());
+        ((ServerImpl) getServer()).setAudioConnection(null);
         setConnectionStatus(VoiceConnectionStatus.DISCONNECTED);
         return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public CompletableFuture<AudioConnection> moveTo(ServerVoiceChannel destinationChannel) {
+        return moveTo(destinationChannel, selfMuted, selfDeafened);
+    }
+
+    @Override
+    public CompletableFuture<AudioConnection> moveTo(ServerVoiceChannel destinationChannel,
+                                                     boolean selfMute,
+                                                     boolean selfDeafen) {
+        CompletableFuture<AudioConnection> future = new CompletableFuture<>();
+        if (connectionStatus == VoiceConnectionStatus.DISCONNECTED) {
+            future.completeExceptionally(new IllegalStateException("AudioConnection is disconnected!"));
+            return future;
+        }
+        setSelfMuted(selfMute);
+        setSelfDeafened(selfDeafen);
+        if(destinationChannel.equals(connectedChannel)) {
+            //We're already connected here
+            future.complete(this);
+            return future;
+        }
+        if(!destinationChannel.getServer().equals(getServer())) {
+            //We're going to do a cross-server move which requires reconnecting
+            AtomicReference<ListenerManager<VoiceServerUpdateListener>> lm = new AtomicReference<>();
+            lm.set(api.addListener(VoiceServerUpdateListener.class, event -> {
+                if (event.getServer() != destinationChannel.getServer()) {
+                    return;
+                }
+                String endpoint = event.getEndpoint();
+                String token = event.getToken();
+
+                //Terminate & reconnect source to destination
+                disconnect();
+                webSocket = new AudioWebSocketAdapter(api, this, endpoint, token);
+                webSocket.connect();
+                setConnectedChannel(destinationChannel);
+
+                future.complete(this);
+                lm.get().remove();
+            }));
+            //Terminate destination (If there is one)
+            destinationChannel.getServer().getAudioConnection().ifPresent(AudioConnection::disconnect);
+        }
+        api.getWebSocketAdapter().sendVoiceStateUpdate(
+                destinationChannel.getServer(),
+                destinationChannel,
+                selfMute,
+                selfDeafen);
+        return future;
     }
 
     @Override
