@@ -8,6 +8,7 @@ import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.event.channel.server.voice.ServerVoiceChannelMemberJoinEvent;
 import org.javacord.api.event.channel.server.voice.ServerVoiceChannelMemberLeaveEvent;
+import org.javacord.api.event.server.voice.VoiceStateUpdateEvent;
 import org.javacord.api.event.user.UserChangeDeafenedEvent;
 import org.javacord.api.event.user.UserChangeMutedEvent;
 import org.javacord.api.event.user.UserChangeSelfDeafenedEvent;
@@ -19,6 +20,7 @@ import org.javacord.core.entity.channel.ServerVoiceChannelImpl;
 import org.javacord.core.entity.server.ServerImpl;
 import org.javacord.core.event.channel.server.voice.ServerVoiceChannelMemberJoinEventImpl;
 import org.javacord.core.event.channel.server.voice.ServerVoiceChannelMemberLeaveEventImpl;
+import org.javacord.core.event.server.voice.VoiceStateUpdateEventImpl;
 import org.javacord.core.event.user.UserChangeDeafenedEventImpl;
 import org.javacord.core.event.user.UserChangeMutedEventImpl;
 import org.javacord.core.event.user.UserChangeSelfDeafenedEventImpl;
@@ -88,6 +90,9 @@ public class VoiceStateUpdateHandler extends PacketHandler {
 
                         newChannel.ifPresent(channel -> {
                             channel.addConnectedUser(userId);
+                            //Not sure if this should go here, it makes sense for when we *want* VSUs, but are there other cases?
+                            dispatchVoiceStateUpdateEvent(
+                                    packet.get("user_id").asLong(), channel, server, packet.get("session_id").asText());
                             if (userId == api.getClientId()) {
                                 channel.getServer().getAudioConnection().ifPresent(connection ->
                                         ((AudioConnectionImpl) connection).setConnectedChannel(channel));
@@ -134,6 +139,12 @@ public class VoiceStateUpdateHandler extends PacketHandler {
     private void handleGroupChannel(long userId, GroupChannelImpl channel) {
         //channel.addConnectedUser(user);
         //dispatchVoiceChannelMemberJoinEvent(user, channel);
+    }
+
+    private void dispatchVoiceStateUpdateEvent(Long userId, ServerVoiceChannel newChannel, Server server, String sessionId) {
+        VoiceStateUpdateEvent event = new VoiceStateUpdateEventImpl(newChannel, userId, sessionId);
+
+        api.getEventDispatcher().dispatchVoiceStateUpdateEvent((DispatchQueueSelector) server, newChannel, event);
     }
 
     private void dispatchServerVoiceChannelMemberJoinEvent(
