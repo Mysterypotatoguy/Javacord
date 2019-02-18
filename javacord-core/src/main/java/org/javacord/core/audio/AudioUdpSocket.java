@@ -14,6 +14,8 @@ import java.util.EnumSet;
 
 public class AudioUdpSocket {
 
+    public static final long OPUS_FRAME_NANOS = 20000000L;
+
     private DatagramSocket socket;
 
     private InetSocketAddress address;
@@ -87,13 +89,14 @@ public class AudioUdpSocket {
                     long lastFrameTimestamp = System.nanoTime();
                     int silenceFramesToSend = 0;
                     while (!sendThread.isInterrupted()) {
+                        long currentNanoTime = System.nanoTime();
                         if (!voiceConnection.getAudioSource().isPresent()
-                                || System.nanoTime() - lastFrameTimestamp < 20000000L) {
+                                || currentNanoTime - lastFrameTimestamp < OPUS_FRAME_NANOS) {
                             try {
-                                Thread.sleep((20000000L - (System.nanoTime() - lastFrameTimestamp)) / 1000000);
+                                Thread.sleep((OPUS_FRAME_NANOS - (currentNanoTime - lastFrameTimestamp)) / 1000000);
                                 continue;
                             } catch (InterruptedException e) {
-                                e.printStackTrace();
+                                break;
                             }
                         }
                         AudioSource source = voiceConnection.getAudioSource().get();
@@ -107,6 +110,7 @@ public class AudioUdpSocket {
                                 socket.send(audioPacket);
                             } catch (IOException e) {
                                 e.printStackTrace();
+                                break;
                             }
                             sequence++;
                             timestamp += 960;
@@ -119,7 +123,7 @@ public class AudioUdpSocket {
                                 setSpeaking(false);
                             }
                         }
-                        lastFrameTimestamp = System.nanoTime();
+                        lastFrameTimestamp += OPUS_FRAME_NANOS;
                     }
                 });
         sendThread.setName("Javacord Audio Send Thread (Server: " + voiceConnection.getServer().getId() + ")");
