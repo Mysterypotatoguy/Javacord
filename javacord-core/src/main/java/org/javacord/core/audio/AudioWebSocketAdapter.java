@@ -3,7 +3,12 @@ package org.javacord.core.audio;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.neovisionaries.ws.client.*;
+import com.neovisionaries.ws.client.ThreadType;
+import com.neovisionaries.ws.client.WebSocket;
+import com.neovisionaries.ws.client.WebSocketAdapter;
+import com.neovisionaries.ws.client.WebSocketException;
+import com.neovisionaries.ws.client.WebSocketFactory;
+import com.neovisionaries.ws.client.WebSocketFrame;
 import org.apache.logging.log4j.Logger;
 import org.javacord.api.audio.AudioConnection.VoiceConnectionStatus;
 import org.javacord.api.audio.SpeakingFlag;
@@ -54,10 +59,10 @@ public class AudioWebSocketAdapter extends WebSocketAdapter {
      * @param token           The voice token received.
      */
     public AudioWebSocketAdapter(DiscordApiImpl api, AudioConnectionImpl voiceConnection, String endpoint,
-                                 String token) {
+                                 String sessionId, String token) {
         this.api = api;
         this.voiceConnection = voiceConnection;
-        this.sessionId = api.getWebSocketAdapter().getSessionId();
+        this.sessionId = sessionId;
         this.endpoint = "wss://" + endpoint.replace(":80", "") + "/?v=" + VOICE_GATEWAY_VERSION;
         this.token = token;
     }

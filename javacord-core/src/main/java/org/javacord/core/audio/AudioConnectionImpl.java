@@ -6,6 +6,7 @@ import org.javacord.api.audio.source.AudioSource;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.listener.server.voice.VoiceServerUpdateListener;
+import org.javacord.api.listener.server.voice.VoiceStateUpdateListener;
 import org.javacord.api.util.event.ListenerManager;
 import org.javacord.core.DiscordApiImpl;
 import org.javacord.core.entity.server.ServerImpl;
@@ -49,16 +50,27 @@ public class AudioConnectionImpl implements AudioConnection {
         this.connectedFuture = future;
         this.connectedChannel = channel;
         future.thenAccept(connection -> ((ServerImpl) connection.getServer()).setAudioConnection(this));
-        AtomicReference<ListenerManager<VoiceServerUpdateListener>> lm = new AtomicReference<>();
-        lm.set(api.addListener(VoiceServerUpdateListener.class, event -> {
+        AtomicReference<ListenerManager<VoiceStateUpdateListener>> voiceStateListenerManager = new AtomicReference<>();
+        AtomicReference<ListenerManager<VoiceServerUpdateListener>> voiceServerListenerManager = new AtomicReference<>();
+        AtomicReference<String> sessionId = new AtomicReference<>();
+        voiceStateListenerManager.set(api.addListener(VoiceStateUpdateListener.class, event -> {
+            if (event.getServer() != channel.getServer() || event.getUser() != api.getYourself()) {
+                return;
+            }
+            System.out.println(api.getWebSocketAdapter().getSessionId());
+            System.out.println(event.getSessionId());
+            sessionId.set(event.getSessionId());
+            voiceStateListenerManager.get().remove();
+        }));
+        voiceServerListenerManager.set(api.addListener(VoiceServerUpdateListener.class, event -> {
             if (event.getServer() != channel.getServer()) {
                 return;
             }
             String endpoint = event.getEndpoint();
             String token = event.getToken();
-            webSocket = new AudioWebSocketAdapter(api, this, endpoint, token);
+            webSocket = new AudioWebSocketAdapter(api, this, endpoint, sessionId.get(), token);
             webSocket.connect();
-            lm.get().remove();
+            voiceServerListenerManager.get().remove();
         }));
         api.getWebSocketAdapter().sendVoiceStateUpdate(
                 channel.getServer(),
@@ -105,8 +117,17 @@ public class AudioConnectionImpl implements AudioConnection {
         }
         if(!destinationChannel.getServer().equals(getServer())) {
             //We're going to do a cross-server move which requires reconnecting
-            AtomicReference<ListenerManager<VoiceServerUpdateListener>> lm = new AtomicReference<>();
-            lm.set(api.addListener(VoiceServerUpdateListener.class, event -> {
+            AtomicReference<ListenerManager<VoiceServerUpdateListener>> voiceServerListenerManager = new AtomicReference<>();
+            AtomicReference<ListenerManager<VoiceStateUpdateListener>> voiceStateListenerManager = new AtomicReference<>();
+            AtomicReference<String> sessionId = new AtomicReference<>();
+            voiceStateListenerManager.set(api.addListener(VoiceStateUpdateListener.class, event -> {
+                if (event.getServer() != destinationChannel.getServer() || event.getUser() != api.getYourself()) {
+                    return;
+                }
+                sessionId.set(event.getSessionId());
+                voiceStateListenerManager.get().remove();
+            }));
+            voiceServerListenerManager.set(api.addListener(VoiceServerUpdateListener.class, event -> {
                 if (event.getServer() != destinationChannel.getServer()) {
                     return;
                 }
@@ -115,12 +136,12 @@ public class AudioConnectionImpl implements AudioConnection {
 
                 //Terminate & reconnect source to destination
                 disconnect();
-                webSocket = new AudioWebSocketAdapter(api, this, endpoint, token);
+                webSocket = new AudioWebSocketAdapter(api, this, endpoint, sessionId.get(), token);
                 webSocket.connect();
                 setConnectedChannel(destinationChannel);
 
                 future.complete(this);
-                lm.get().remove();
+                voiceServerListenerManager.get().remove();
             }));
             //Terminate destination (If there is one)
             destinationChannel.getServer().getAudioConnection().ifPresent(AudioConnection::disconnect);
