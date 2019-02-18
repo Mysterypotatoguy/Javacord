@@ -1191,6 +1191,7 @@ public class DiscordApiImpl implements DiscordApi, DispatchQueueSelector {
                     // if no web socket is connected, immediately shutdown thread pool
                     threadPool.shutdown();
                 } else {
+                    getAudioConnections().forEach(AudioConnection::disconnect);
                     // shutdown thread pool after web socket disconnected event was dispatched
                     addLostConnectionListener(event -> threadPool.shutdown());
                     // disconnect web socket
@@ -1201,7 +1202,6 @@ public class DiscordApiImpl implements DiscordApi, DispatchQueueSelector {
                 disconnectCalled = true;
                 httpClient.dispatcher().executorService().shutdown();
                 httpClient.connectionPool().evictAll();
-                getAudioConnections().forEach(AudioConnection::disconnect);
             }
         }
     }
