@@ -65,6 +65,10 @@ public class VoiceStateUpdateHandler extends PacketHandler {
     private void handleServerVoiceChannel(JsonNode packet, long userId) {
         api.getPossiblyUnreadyServerById(packet.get("guild_id").asLong())
                 .map(ServerImpl.class::cast).ifPresent(server -> {
+
+                    JsonNode memberData = packet.get("member");
+                    server.updateMember(memberData);
+
                     Optional<ServerVoiceChannelImpl> oldChannel = server
                             .getConnectedVoiceChannel(userId)
                             .map(ServerVoiceChannelImpl.class::cast);

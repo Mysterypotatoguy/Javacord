@@ -6,7 +6,9 @@ import org.javacord.api.entity.channel.ServerChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.server.Server;
+import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
+import org.javacord.core.entity.server.ServerImpl;
 import org.javacord.core.event.message.MessageCreateEventImpl;
 import org.javacord.core.util.event.DispatchQueueSelector;
 import org.javacord.core.util.gateway.PacketHandler;
@@ -34,6 +36,12 @@ public class MessageCreateHandler extends PacketHandler {
             MessageCreateEvent event = new MessageCreateEventImpl(message);
 
             Optional<Server> optionalServer = channel.asServerChannel().map(ServerChannel::getServer);
+            optionalServer.ifPresent(server -> {
+                if (!packet.has("webhook_id")) {
+                    User user = api.getOrCreateUser(packet.get("author"));
+                    ((ServerImpl) server).updateMember(packet.get("member"), user.getId());
+                }
+            });
             MessageAuthor author = message.getAuthor();
             api.getEventDispatcher().dispatchMessageCreateEvent(
                     optionalServer.map(DispatchQueueSelector.class::cast).orElse(api),

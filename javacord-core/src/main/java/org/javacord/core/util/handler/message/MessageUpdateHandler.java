@@ -4,15 +4,18 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.logging.log4j.Logger;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.ServerChannel;
+import org.javacord.api.entity.channel.ServerTextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.server.Server;
+import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.CachedMessagePinEvent;
 import org.javacord.api.event.message.CachedMessageUnpinEvent;
 import org.javacord.api.event.message.MessageEditEvent;
 import org.javacord.core.entity.message.MessageImpl;
 import org.javacord.core.entity.message.embed.EmbedBuilderDelegateImpl;
 import org.javacord.core.entity.message.embed.EmbedImpl;
+import org.javacord.core.entity.server.ServerImpl;
 import org.javacord.core.event.message.CachedMessagePinEventImpl;
 import org.javacord.core.event.message.CachedMessageUnpinEventImpl;
 import org.javacord.core.event.message.MessageEditEventImpl;
@@ -69,6 +72,16 @@ public class MessageUpdateHandler extends PacketHandler {
             Optional<MessageImpl> message = api.getCachedMessageById(messageId).map(msg -> (MessageImpl) msg);
 
             message.ifPresent(msg -> {
+                Optional<Server> optionalServer = msg.getChannel().asServerChannel().map(ServerChannel::getServer);
+                optionalServer.flatMap(server -> channel.asServerTextChannel()
+                        .map(ServerTextChannel::getServer))
+                        .ifPresent(server -> {
+                            if (!packet.has("webhook_id")) {
+                                User user = api.getOrCreateUser(packet.get("author"));
+                                ((ServerImpl) server).updateMember(packet.get("member"), user.getId());
+                            }
+                        });
+
                 boolean newPinnedFlag = packet.hasNonNull("pinned") ? packet.get("pinned").asBoolean() : msg.isPinned();
                 boolean oldPinnedFlag = msg.isPinned();
                 if (newPinnedFlag != oldPinnedFlag) {
@@ -77,8 +90,6 @@ public class MessageUpdateHandler extends PacketHandler {
                     if (newPinnedFlag) {
                         CachedMessagePinEvent event = new CachedMessagePinEventImpl(msg);
 
-                        Optional<Server> optionalServer =
-                                msg.getChannel().asServerChannel().map(ServerChannel::getServer);
                         api.getEventDispatcher().dispatchCachedMessagePinEvent(
                                 optionalServer.map(DispatchQueueSelector.class::cast).orElse(api),
                                 msg,
@@ -88,8 +99,6 @@ public class MessageUpdateHandler extends PacketHandler {
                     } else {
                         CachedMessageUnpinEvent event = new CachedMessageUnpinEventImpl(msg);
 
-                        Optional<Server> optionalServer =
-                                msg.getChannel().asServerChannel().map(ServerChannel::getServer);
                         api.getEventDispatcher().dispatchCachedMessageUnpinEvent(
                                 optionalServer.map(DispatchQueueSelector.class::cast).orElse(api),
                                 msg,

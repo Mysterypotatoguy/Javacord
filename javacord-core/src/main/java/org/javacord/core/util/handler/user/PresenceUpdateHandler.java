@@ -43,6 +43,7 @@ public class PresenceUpdateHandler extends PacketHandler {
     public void handle(JsonNode packet) {
         // ignore the guild_id and send to all mutual servers instead or we must track the properties per server
         // or all packets after the first do not detect a change and will not send around an event for the server
+        api.getOrCreateUser(packet.get("user"));
         long userId = packet.get("user").get("id").asLong();
         api.getCachedUserById(userId).map(UserImpl.class::cast).ifPresent(user -> {
             if (packet.has("game")) {

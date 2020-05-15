@@ -10,6 +10,7 @@ import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.reaction.ReactionAddEvent;
 import org.javacord.core.entity.emoji.UnicodeEmojiImpl;
 import org.javacord.core.entity.message.MessageImpl;
+import org.javacord.core.entity.server.ServerImpl;
 import org.javacord.core.event.message.reaction.ReactionAddEventImpl;
 import org.javacord.core.util.event.DispatchQueueSelector;
 import org.javacord.core.util.gateway.PacketHandler;
@@ -36,6 +37,11 @@ public class MessageReactionAddHandler extends PacketHandler {
             long messageId = packet.get("message_id").asLong();
             User user = api.getCachedUserById(packet.get("user_id").asText()).orElseThrow(AssertionError::new);
             Optional<Message> message = api.getCachedMessageById(messageId);
+            Optional<Server> optionalServer = channel.asServerChannel().map(ServerChannel::getServer);
+            optionalServer.ifPresent(server -> {
+                JsonNode memberJson = packet.get("member");
+                ((ServerImpl) server).updateMember(memberJson);
+            });
 
             Emoji emoji;
             JsonNode emojiJson = packet.get("emoji");
@@ -49,7 +55,6 @@ public class MessageReactionAddHandler extends PacketHandler {
 
             ReactionAddEvent event = new ReactionAddEventImpl(api, messageId, channel, emoji, user);
 
-            Optional<Server> optionalServer = channel.asServerChannel().map(ServerChannel::getServer);
             api.getEventDispatcher().dispatchReactionAddEvent(
                     optionalServer.map(DispatchQueueSelector.class::cast).orElse(api),
                     messageId,

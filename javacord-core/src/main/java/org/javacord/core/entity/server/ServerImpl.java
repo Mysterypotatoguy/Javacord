@@ -788,24 +788,7 @@ public class ServerImpl implements Server, Cleanupable, InternalServerAttachable
      * @param member The user to add.
      */
     public void addMember(JsonNode member) {
-        User user = api.getOrCreateUser(member.get("user"));
-        members.put(user.getId(), user);
-        if (member.hasNonNull("nick")) {
-            nicknames.put(user.getId(), member.get("nick").asText());
-        }
-        if (member.hasNonNull("mute")) {
-            setMuted(user.getId(), member.get("mute").asBoolean());
-        }
-        if (member.hasNonNull("deaf")) {
-            setDeafened(user.getId(), member.get("deaf").asBoolean());
-        }
-
-        for (JsonNode roleIds : member.get("roles")) {
-            long roleId = Long.parseLong(roleIds.asText());
-            getRoleById(roleId).map(role -> ((RoleImpl) role)).ifPresent(role -> role.addUserToCache(user));
-        }
-
-        joinedAtTimestamps.put(user.getId(), OffsetDateTime.parse(member.get("joined_at").asText()).toInstant());
+        updateMember(member, member.get("user").get("id").asLong());
 
         synchronized (readyConsumers) {
             if (!ready && members.size() == getMemberCount()) {
@@ -813,6 +796,46 @@ public class ServerImpl implements Server, Cleanupable, InternalServerAttachable
                 readyConsumers.forEach(consumer -> consumer.accept(this));
                 readyConsumers.clear();
             }
+        }
+    }
+
+    /**
+     * Adds/updates the properties of a member in this server.
+     *
+     * @param member The member to update.
+     */
+    public void updateMember(JsonNode member) {
+        updateMember(member, 0);
+    }
+
+    /**
+     * Adds/updates the properties of a member in this server.
+     * The user ID is passed to fetch the user from cache if it is not present in the member object (e.g message_create)
+     *
+     * @param member The member to update
+     * @param userId The ID of the member to update if the user field is not present.
+     */
+    public void updateMember(JsonNode member, long userId) {
+        User user;
+        if (member.has("user")) {
+            user = api.getOrCreateUser(member.get("user"));
+        } else {
+            //user field is not included in message_create events, but is included in author field.
+            // If this throws we somehow failed to add the user to cache
+            user = api.getCachedUserById(userId).orElseThrow(AssertionError::new);
+        }
+        members.put(userId, user);
+        if (member.hasNonNull("nick")) {
+            nicknames.put(user.getId(), member.get("nick").asText());
+        }
+        if (member.hasNonNull("mute")) {
+            setMuted(userId, member.get("mute").asBoolean());
+        }
+        if (member.hasNonNull("deaf")) {
+            setDeafened(userId, member.get("deaf").asBoolean());
+        }
+        if (member.hasNonNull("joined_at")) {
+            joinedAtTimestamps.put(userId, OffsetDateTime.parse(member.get("joined_at").asText()).toInstant());
         }
     }
 
