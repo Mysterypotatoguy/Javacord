@@ -815,9 +815,7 @@ public class DiscordApiImpl implements DiscordApi, DispatchQueueSelector {
                 if (!data.has("username")) {
                     throw new IllegalStateException("Couldn't get or created user. Please inform the developer!");
                 }
-                UserImpl user = new UserImpl(this, data);
-                addUserToCache(user);
-                return user;
+                return new UserImpl(this, data);
             });
         }
     }

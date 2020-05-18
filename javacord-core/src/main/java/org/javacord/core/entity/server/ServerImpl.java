@@ -837,6 +837,11 @@ public class ServerImpl implements Server, Cleanupable, InternalServerAttachable
         if (member.hasNonNull("joined_at")) {
             joinedAtTimestamps.put(userId, OffsetDateTime.parse(member.get("joined_at").asText()).toInstant());
         }
+
+        for (JsonNode roleIds : member.get("roles")) {
+            long roleId = Long.parseLong(roleIds.asText());
+            getRoleById(roleId).map(role -> ((RoleImpl) role)).ifPresent(role -> role.addUserToCache(user));
+        }
     }
 
     /**
