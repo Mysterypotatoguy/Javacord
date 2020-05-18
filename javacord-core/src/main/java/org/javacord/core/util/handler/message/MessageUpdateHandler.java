@@ -77,8 +77,12 @@ public class MessageUpdateHandler extends PacketHandler {
                         .map(ServerTextChannel::getServer))
                         .ifPresent(server -> {
                             if (!packet.has("webhook_id")) {
-                                User user = api.getOrCreateUser(packet.get("author"));
-                                ((ServerImpl) server).updateMember(packet.get("member"), user.getId());
+                                if (packet.has("author")) {
+                                    User user = api.getOrCreateUser(packet.get("author"));
+                                    if (packet.has("member")) {
+                                        ((ServerImpl) server).updateMember(packet.get("member"), user.getId());
+                                    }
+                                }
                             }
                         });
 
