@@ -113,7 +113,7 @@ public class RatelimitBucket {
     public int getTimeTillSpaceGetsAvailable() {
         long globalRatelimitResetTimestamp =
                 RatelimitBucket.globalRatelimitResetTimestamp.getOrDefault(api.getToken(), 0L);
-        long timestamp = System.currentTimeMillis() + (api.getTimeOffset() == null ? 0 : api.getTimeOffset());
+        long timestamp = System.currentTimeMillis();
         if (ratelimitRemaining > 0 && (globalRatelimitResetTimestamp - timestamp) <= 0) {
             return 0;
         }
