@@ -23,7 +23,7 @@ public class MemberCache {
 
     private static final MemberCache EMPTY_CACHE = new MemberCache(
             Cache.<Member>empty()
-                    .addIndex(ID_INDEX_NAME, Member::getId)
+                    .addUniqueIndex(ID_INDEX_NAME, Member::getId)
                     .addIndex(SERVER_ID_INDEX_NAME, member -> member.getServer().getId())
                     .addIndex(ID_AND_SERVER_ID_INDEX_NAME,
                             member -> Tuple.of(member.getId(), member.getServer().getId())),

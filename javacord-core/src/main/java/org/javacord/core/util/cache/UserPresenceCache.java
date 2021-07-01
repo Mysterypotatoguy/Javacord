@@ -12,7 +12,7 @@ public class UserPresenceCache {
     private static final String USER_ID_INDEX_NAME = "user-id";
 
     private static final UserPresenceCache EMPTY_CACHE = new UserPresenceCache(Cache.<UserPresence>empty()
-            .addIndex(USER_ID_INDEX_NAME, UserPresence::getUserId)
+            .addUniqueIndex(USER_ID_INDEX_NAME, UserPresence::getUserId)
     );
 
     private final Cache<UserPresence> cache;

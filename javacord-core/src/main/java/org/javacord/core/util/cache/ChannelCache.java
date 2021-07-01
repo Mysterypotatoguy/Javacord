@@ -28,7 +28,7 @@ public class ChannelCache {
     private static final String PRIVATE_CHANNEL_USER_ID_INDEX_NAME = "user-id";
 
     private static final ChannelCache EMPTY_CACHE = new ChannelCache(Cache.<Channel>empty()
-            .addIndex(ID_INDEX_NAME, Channel::getId)
+            .addUniqueIndex(ID_INDEX_NAME, Channel::getId)
             .addIndex(TYPE_INDEX_NAME, Channel::getType)
             .addIndex(SERVER_ID_INDEX_NAME, channel -> channel
                     .asServerChannel()

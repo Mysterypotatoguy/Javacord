@@ -77,7 +77,37 @@ public class Cache<T> {
         if (indexes.containsKey(indexName)) {
             throw new IllegalStateException("The cache already has an index with name " + indexName);
         }
-        Index<Object, T> index = new Index<>(mappingFunction);
+        MultiIndex<Object, T> index = new MultiIndex<>(mappingFunction);
+        for (T element : elements) {
+            index = index.addElement(element);
+        }
+        Map<String, Index<Object, T>> newIndexes = indexes.put(indexName, index);
+        return new Cache<>(elements, newIndexes);
+    }
+
+    /**
+     * Adds a unique index to the cache (every key should produce a unique value).
+     *
+     * <p>Indexes allow quick access (effectively {@code O(1)} to elements in the cache by the key for the index like
+     * for example the id or sub type.
+     *
+     * <p>Compound indexes can easily be achieved by using a {@link io.vavr.Tuple} or {@link io.vavr.collection.Seq}
+     * with all keys as the return value of the mapping function.
+     *
+     * <p>This method has a time-complexity of {@code O(n)} with {@code n} being the amount of elements in the cache.
+     *
+     * @param indexName The name of the index.
+     * @param mappingFunction A function to map elements to their key.
+     *                        The function is allowed to return {@code null} which means that the element will not be
+     *                        included in the index.
+     * @return The new cache with the added index.
+     * @throws IllegalStateException If the cache already has an index with the given name.
+     */
+    public Cache<T> addUniqueIndex(String indexName, Function<T, Object> mappingFunction) {
+        if (indexes.containsKey(indexName)) {
+            throw new IllegalStateException("The cache already has an index with name " + indexName);
+        }
+        UniqueIndex<Object, T> index = new UniqueIndex<>(mappingFunction);
         for (T element : elements) {
             index = index.addElement(element);
         }

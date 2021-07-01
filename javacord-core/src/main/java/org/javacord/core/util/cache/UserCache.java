@@ -14,7 +14,7 @@ public class UserCache {
     private static final String ID_INDEX_NAME = "id";
 
     private static final UserCache EMPTY_CACHE = new UserCache(Cache.<User>empty()
-            .addIndex(ID_INDEX_NAME, User::getId)
+            .addUniqueIndex(ID_INDEX_NAME, User::getId)
     );
 
     private final Cache<User> cache;
